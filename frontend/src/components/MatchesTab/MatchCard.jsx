@@ -42,8 +42,9 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
   const awayTeam = teamMap[game.away_team_id];
   const stadium  = stadiumMap[game.stadium_id];
 
-  const utcDate    = gameToUTC(game.local_date, game.stadium_id);
-  const { time: kickoffBRT } = formatBRT(utcDate);
+  const utcDate = gameToUTC(game.local_date, game.stadium_id);
+  const { date: brtDate, time: kickoffBRT } = formatBRT(utcDate);
+  const shortDate = brtDate.slice(0, 5); // "23/06"
 
   const homeScorers = (isFinished || isLive) ? parseScorers(game.home_scorers) : [];
   const awayScorers = (isFinished || isLive) ? parseScorers(game.away_scorers) : [];
@@ -74,14 +75,18 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
     <div className={`${styles.card} ${isLive ? styles.live : ''}`}>
       {/* Header */}
       <div className={styles.header}>
-        <span>{stageLabel(game)}</span>
+        <span>
+          {game.type === 'group'
+            ? `Grupo ${game.group} · ${shortDate}`
+            : stageLabel(game)}
+        </span>
         {isLive && (
           <span className={styles.liveBadge}>
             <span className={styles.liveDot} />
             AO VIVO
           </span>
         )}
-        {isFinished && <span>Encerrado</span>}
+        {isFinished && <span>Encerrado · {kickoffBRT}</span>}
       </div>
 
       {/* Teams + Score/Time */}
