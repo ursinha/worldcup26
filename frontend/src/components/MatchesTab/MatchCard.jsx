@@ -148,8 +148,8 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         </div>
       )}
 
-      {/* Prediction — upcoming only */}
-      {status === 'notstarted' && game.pred_scores && (
+      {/* Prediction — upcoming and live only */}
+      {status !== 'finished' && game.pred_scores && (
         <div className={styles.prediction}>
           <div className={styles.predHeader}>
             <span className={styles.predLabel}>Placar estimado</span>
