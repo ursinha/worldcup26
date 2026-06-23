@@ -4,6 +4,7 @@ module.exports = {
       name: 'worldcup',
       script: './backend/server.js',
       cwd: __dirname,
+      node_args: '--env-file=./backend/.env',
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,

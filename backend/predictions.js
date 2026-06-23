@@ -144,7 +144,8 @@ export function computeAllPredictions(games) {
 
   const rows = [];
   for (const g of upcoming) {
-    const pred = predictMatch(g.home_team_id, g.away_team_id, model);
+    // Pass ou_line if available — calibrates λ against bookmaker O/U total
+    const pred = predictMatch(g.home_team_id, g.away_team_id, model, g.ou_line ?? null);
     if (!pred) continue;
     rows.push({ id: g.id, ...pred, pred_updated_at: now });
   }

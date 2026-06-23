@@ -3,11 +3,12 @@ import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions } from './db.js';
+import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions, saveOdds } from './db.js';
 import { computeAllPredictions } from './predictions.js';
 import * as primary from './sources/primary.js';
 import * as live from './sources/live.js';
 import { toESPNDate } from './sources/live.js';
+import * as oddsSource from './sources/odds.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dir, '../frontend/dist');
@@ -132,6 +133,30 @@ function scheduleLive() {
   liveTimer = setTimeout(pollLive, live.intervals.live);
 }
 
+// Odds source — O/U lines from The Odds API
+let oddsTimer = null;
+
+async function pollOdds() {
+  try {
+    const raw     = await oddsSource.fetchOdds();
+    const updates = oddsSource.extractOdds(raw, cache.matches?.games ?? []);
+    if (updates.length) {
+      saveOdds(updates);
+      refreshCache();
+      // Recompute predictions with the new O/U lines
+      const predRows = computeAllPredictions(cache.matches?.games ?? []);
+      if (predRows.length) { savePredictions(predRows); refreshCache(); }
+      console.log(`[${oddsSource.id}] updated ${updates.length} O/U line(s)`);
+    } else {
+      console.log(`[${oddsSource.id}] no matches found in odds feed`);
+    }
+  } catch (err) {
+    console.error(`[${oddsSource.id}]`, err.message);
+  }
+  clearTimeout(oddsTimer);
+  oddsTimer = setTimeout(pollOdds, oddsSource.intervals.idle);
+}
+
 // Static data — fetch once at startup, sourced from primary
 try {
   const { groups, teams, stadiums } = await primary.fetchStatic();
@@ -149,6 +174,7 @@ try {
 await pollPrimary();
 pollLive();
 backfillEvents();
+pollOdds();
 
 // ---------------------------------------------------------------------------
 // Routes
@@ -185,6 +211,7 @@ const server = app.listen(PORT, '0.0.0.0', () => console.log(`Server on http://0
 function shutdown() {
   clearTimeout(primaryTimer);
   clearTimeout(liveTimer);
+  clearTimeout(oddsTimer);
   server.close(() => process.exit(0));
 }
 process.on('SIGTERM', shutdown);

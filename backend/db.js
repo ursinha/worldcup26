@@ -85,6 +85,7 @@ db.exec(`
     ['win_draw',        'REAL'],
     ['win_away',        'REAL'],
     ['pred_updated_at', 'INTEGER'],
+    ['ou_line',         'REAL'],
   ];
   for (const [col, type] of toAdd) {
     if (!cols.includes(col)) {
@@ -154,6 +155,13 @@ const _upsertPrediction = db.prepare(`
     pred_updated_at = excluded.pred_updated_at
 `);
 
+const _upsertOdds = db.prepare(`
+  INSERT INTO matches (id, ou_line)
+  VALUES (@id, @ou_line)
+  ON CONFLICT(id) DO UPDATE SET
+    ou_line = excluded.ou_line
+`);
+
 const _upsertGroup   = db.prepare('INSERT INTO groups_tbl (name, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertTeam    = db.prepare('INSERT INTO teams (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertStadium = db.prepare('INSERT INTO stadiums (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
@@ -161,6 +169,7 @@ const _upsertStadium = db.prepare('INSERT INTO stadiums (id, data, updated_at) V
 export const savePrimary     = db.transaction((rows) => { for (const r of rows) _upsertPrimary.run(r); });
 export const saveEnrichment  = db.transaction((rows) => { for (const r of rows) _upsertEnrichment.run(r); });
 export const savePredictions = db.transaction((rows) => { for (const r of rows) _upsertPrediction.run(r); });
+export const saveOdds        = db.transaction((rows) => { for (const r of rows) _upsertOdds.run(r); });
 export const saveGroups     = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertGroup.run(r.name, JSON.stringify(r), now); });
 export const saveTeams      = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertTeam.run(r.id, JSON.stringify(r), now); });
 export const saveStadiums   = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertStadium.run(r.id, JSON.stringify(r), now); });
@@ -200,6 +209,7 @@ function rowToGame(row) {
     win_home:          row.win_home      ?? null,
     win_draw:          row.win_draw      ?? null,
     win_away:          row.win_away      ?? null,
+    ou_line:           row.ou_line       ?? null,
   };
 }
 
