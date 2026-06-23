@@ -22,11 +22,16 @@ export default function GroupTable({ group, teamMap }) {
     <div className={styles.group}>
       <div className={styles.groupTitle}>Grupo {group.name}</div>
       <table className={styles.table}>
+        <colgroup>
+          <col style={{ width: 28 }} />
+          <col />
+          {COLS.map((c) => <col key={c.key} style={{ width: 28 }} />)}
+        </colgroup>
         <thead>
           <tr>
             <th className={styles.teamCol} colSpan={2}>Seleção</th>
             {COLS.map((c) => (
-              <th key={c.key}>{c.label}</th>
+              <th key={c.key} className={styles.stat}>{c.label}</th>
             ))}
           </tr>
         </thead>
@@ -37,17 +42,17 @@ export default function GroupTable({ group, teamMap }) {
 
             return (
               <tr key={entry.team_id} className={isQualified ? styles.qualified : ''}>
-                <td style={{ width: 24, padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
+                <td style={{ padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
                   <span className={styles.pos}>{idx + 1}</span>
                 </td>
                 <td className={`${styles.teamCell} ${isQualified ? styles.qualBorder : ''}`}>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}
-                  {team?.name_en ?? `ID ${entry.team_id}`}
+                  <span className={styles.teamName}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
                 </td>
                 {COLS.map((c) => (
-                  <td key={c.key} className={c.key === 'pts' ? styles.pts : ''}>
+                  <td key={c.key} className={`${styles.stat} ${c.key === 'pts' ? styles.pts : ''}`}>
                     {entry[c.key]}
                   </td>
                 ))}
