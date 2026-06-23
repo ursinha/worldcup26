@@ -161,19 +161,15 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
               ))}
             </div>
           </div>
-          <div className={styles.predBar}>
-            <span className={styles.predTeam}>{game.home_team_label}</span>
-            <div className={styles.predBarTrack}>
-              <div className={styles.predBarHome} style={{ width: `${game.win_home}%` }} />
-              <div className={styles.predBarDraw} style={{ width: `${game.win_draw}%` }} />
-              <div className={styles.predBarAway} style={{ width: `${game.win_away}%` }} />
-            </div>
-            <span className={styles.predTeam}>{game.away_team_label}</span>
-          </div>
           <div className={styles.predOutcomes}>
-            <span>{game.win_home}%</span>
-            <span>Empate {game.win_draw}%</span>
-            <span>{game.win_away}%</span>
+            <span className={styles.predWinHome}>{game.win_home}%</span>
+            <span className={styles.predWinDraw}>Empate {game.win_draw}%</span>
+            <span className={styles.predWinAway}>{game.win_away}%</span>
+          </div>
+          <div className={styles.predBarTrack}>
+            <div className={styles.predBarHome} style={{ width: `${game.win_home}%` }} />
+            <div className={styles.predBarDraw} style={{ width: `${game.win_draw}%` }} />
+            <div className={styles.predBarAway} style={{ width: `${game.win_away}%` }} />
           </div>
         </div>
       )}

@@ -269,29 +269,29 @@
   color: var(--text-3);
 }
 
-/* Probability bar */
-.predBar {
+.predOutcomes {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 600;
 }
 
-.predTeam {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--text-2);
-  font-family: 'JetBrains Mono', monospace;
-  min-width: 2.4rem;
-  letter-spacing: 0.04em;
+.predWinHome {
+  color: var(--accent);
 }
 
-.predTeam:last-child {
-  text-align: right;
+.predWinDraw {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.predWinAway {
+  color: #d97706;
 }
 
 .predBarTrack {
-  flex: 1;
-  height: 6px;
+  width: 100%;
+  height: 5px;
   border-radius: 3px;
   overflow: hidden;
   display: flex;
@@ -301,26 +301,16 @@
 .predBarHome {
   height: 100%;
   background: var(--accent);
-  transition: width 0.3s ease;
 }
 
 .predBarDraw {
   height: 100%;
-  background: color-mix(in srgb, var(--text-3) 50%, transparent);
-  transition: width 0.3s ease;
+  background: color-mix(in srgb, var(--text-3) 60%, transparent);
 }
 
 .predBarAway {
   height: 100%;
   background: #d97706;
-  transition: width 0.3s ease;
-}
-
-.predOutcomes {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.63rem;
-  color: var(--text-3);
 }
 
 .footer {
