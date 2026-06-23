@@ -13,6 +13,22 @@ const FILTERS = [
   { key: 'all',      label: 'Todos' },
 ];
 
+function buildDateGroups(games, reverse = false) {
+  const groups = {};
+  for (const game of games) {
+    const utc = gameToUTC(game.local_date, game.stadium_id);
+    const { isoDate, date, weekday } = formatBRT(utc);
+    if (!groups[isoDate]) groups[isoDate] = { isoDate, label: `${weekday}, ${date}`, games: [] };
+    groups[isoDate].games.push({ game, utc });
+  }
+  return Object.values(groups)
+    .sort((a, b) => reverse ? b.isoDate.localeCompare(a.isoDate) : a.isoDate.localeCompare(b.isoDate))
+    .map((g) => ({
+      ...g,
+      games: g.games.sort((a, b) => reverse ? b.utc - a.utc : a.utc - b.utc).map((x) => x.game),
+    }));
+}
+
 export default function MatchesTab() {
   const [filter, setFilter] = useState('live');
   const [matchInterval, setMatchInterval] = useState(15_000);
@@ -74,48 +90,74 @@ export default function MatchesTab() {
     });
   }, [matchesData, filter, today]);
 
-  // Group by BRT date, sorted chronologically
-  const groupedByDate = useMemo(() => {
-    const groups = {};
-    for (const game of filteredGames) {
-      const utc = gameToUTC(game.local_date, game.stadium_id);
-      const { isoDate, date, weekday } = formatBRT(utc);
-      if (!groups[isoDate]) groups[isoDate] = { isoDate, label: `${weekday}, ${date}`, games: [] };
-      groups[isoDate].games.push({ game, utc });
-    }
+  const statusOrder = (game) => {
+    const s = matchStatus(game);
+    if (s === 'live')       return 0;
+    if (s === 'notstarted') return 1;
+    return 2;
+  };
 
-    const statusOrder = (game) => {
-      const s = matchStatus(game);
-      if (s === 'live')       return 0;
-      if (s === 'notstarted') return 1;
-      return 2; // finished
+  // For the "all" tab: two separate sorted sections
+  const allSections = useMemo(() => {
+    if (filter !== 'all') return null;
+    const finished = filteredGames.filter((g) => matchStatus(g) === 'finished');
+    const rest     = filteredGames.filter((g) => matchStatus(g) !== 'finished');
+    return {
+      finishedGroups: buildDateGroups(finished, true),
+      upcomingGroups: buildDateGroups(rest, false),
     };
+  }, [filteredGames, filter]);
 
-    // Sort groups by date, games within each group by time
-    // In the Today tab, finished matches go last
-    // In the Finished tab, groups and games are sorted reverse-chronologically
+  // For all other tabs: single sorted list of date groups
+  const groupedByDate = useMemo(() => {
+    if (filter === 'all') return [];
+
     const reverseDate = filter === 'finished';
-    return Object.values(groups)
-      .sort((a, b) => reverseDate
-        ? b.isoDate.localeCompare(a.isoDate)
-        : a.isoDate.localeCompare(b.isoDate))
-      .map((g) => ({
-        ...g,
-        games: g.games.sort((a, b) => {
-          if (filter === 'today') {
+
+    if (filter === 'today') {
+      // Today: group all games, sort live→upcoming→finished within each day;
+      // finished sub-section sorted reverse-chronologically
+      const groups = {};
+      for (const game of filteredGames) {
+        const utc = gameToUTC(game.local_date, game.stadium_id);
+        const { isoDate, date, weekday } = formatBRT(utc);
+        if (!groups[isoDate]) groups[isoDate] = { isoDate, label: `${weekday}, ${date}`, games: [] };
+        groups[isoDate].games.push({ game, utc });
+      }
+      return Object.values(groups)
+        .sort((a, b) => a.isoDate.localeCompare(b.isoDate))
+        .map((g) => ({
+          ...g,
+          games: g.games.sort((a, b) => {
             const diff = statusOrder(a.game) - statusOrder(b.game);
             if (diff !== 0) return diff;
-            // Finished section in Today tab: most recent first
             if (matchStatus(a.game) === 'finished') return b.utc - a.utc;
-          }
-          return reverseDate ? b.utc - a.utc : a.utc - b.utc;
-        }).map((x) => x.game),
-      }));
-  }, [filteredGames]);
+            return a.utc - b.utc;
+          }).map((x) => x.game),
+        }));
+    }
+
+    return buildDateGroups(filteredGames, reverseDate);
+  }, [filteredGames, filter]);
+
+  const renderDateGroups = (groups, keyPrefix = '') => groups.map(({ isoDate, label, games }) => (
+    <div key={`${keyPrefix}${isoDate}`} className={styles.dateGroup}>
+      <div className={styles.dateHeading}>{label}</div>
+      <div className={styles.cards}>
+        {games.map((game) => (
+          <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+        ))}
+      </div>
+    </div>
+  ));
 
   if (matchesLoading) {
     return <div className={styles.loading}>Carregando partidas…</div>;
   }
+
+  const isEmpty = filter === 'all'
+    ? allSections.finishedGroups.length === 0 && allSections.upcomingGroups.length === 0
+    : groupedByDate.length === 0;
 
   return (
     <div className={styles.container}>
@@ -131,33 +173,41 @@ export default function MatchesTab() {
         ))}
       </div>
 
-      {groupedByDate.length === 0 && (
-        <div className={styles.empty}>Nenhuma partida encontrada.</div>
-      )}
+      {isEmpty && <div className={styles.empty}>Nenhuma partida encontrada.</div>}
 
-      {groupedByDate.map(({ isoDate, label, games }) => {
-        const active   = filter === 'today' ? games.filter(g => matchStatus(g) !== 'finished') : games;
-        const finished = filter === 'today' ? games.filter(g => matchStatus(g) === 'finished') : [];
+      {filter === 'all' && allSections ? (
+        <>
+          {renderDateGroups(allSections.finishedGroups, 'fin-')}
+          {allSections.upcomingGroups.length > 0 && allSections.finishedGroups.length > 0 && (
+            <div className={styles.sectionDivider}>Próximas</div>
+          )}
+          {renderDateGroups(allSections.upcomingGroups, 'upc-')}
+        </>
+      ) : (
+        groupedByDate.map(({ isoDate, label, games }) => {
+          const active   = filter === 'today' ? games.filter((g) => matchStatus(g) !== 'finished') : games;
+          const finished = filter === 'today' ? games.filter((g) => matchStatus(g) === 'finished') : [];
 
-        return (
-          <div key={isoDate} className={styles.dateGroup}>
-            <div className={styles.dateHeading}>{label}</div>
-            <div className={styles.cards}>
-              {active.map((game) => (
-                <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
-              ))}
-              {finished.length > 0 && (
-                <>
-                  <div className={styles.sectionDivider}>Encerradas</div>
-                  {finished.map((game) => (
-                    <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
-                  ))}
-                </>
-              )}
+          return (
+            <div key={isoDate} className={styles.dateGroup}>
+              <div className={styles.dateHeading}>{label}</div>
+              <div className={styles.cards}>
+                {active.map((game) => (
+                  <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+                ))}
+                {finished.length > 0 && (
+                  <>
+                    <div className={styles.sectionDivider}>Encerradas</div>
+                    {finished.map((game) => (
+                      <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })
+      )}
     </div>
   );
 }
