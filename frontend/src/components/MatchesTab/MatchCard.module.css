@@ -106,6 +106,16 @@
   line-height: 1;
 }
 
+.score.scorePulse {
+  animation: goalFlash 1.2s ease-out;
+}
+
+@keyframes goalFlash {
+  0%   { color: var(--accent); transform: scale(1.2); }
+  60%  { color: var(--accent); transform: scale(1.1); }
+  100% { color: var(--score-color); transform: scale(1); }
+}
+
 .elapsed {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;

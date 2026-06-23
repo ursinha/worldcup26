@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { gameToUTC, formatBRT } from '../../utils/time';
 import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
 import styles from './MatchCard.module.css';
@@ -27,6 +28,20 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
   const awayScorers = (isFinished || isLive) ? parseScorers(game.away_scorers) : [];
   const hasScorers = homeScorers.length > 0 || awayScorers.length > 0;
 
+  // Flash score when it changes during a live match
+  const scoreKey = `${game.home_score}-${game.away_score}`;
+  const prevScoreRef = useRef(scoreKey);
+  const [scorePulse, setScorePulse] = useState(false);
+  useEffect(() => {
+    if (isLive && prevScoreRef.current !== scoreKey) {
+      setScorePulse(true);
+      const t = setTimeout(() => setScorePulse(false), 1200);
+      prevScoreRef.current = scoreKey;
+      return () => clearTimeout(t);
+    }
+    prevScoreRef.current = scoreKey;
+  }, [scoreKey, isLive]);
+
   return (
     <div className={`${styles.card} ${isLive ? styles.live : ''}`}>
       {/* Header */}
@@ -48,7 +63,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         <div className={styles.scoreOrTime}>
           {isFinished || isLive ? (
             <>
-              <span className={styles.score}>
+              <span className={`${styles.score} ${scorePulse ? styles.scorePulse : ''}`}>
                 {game.home_score} – {game.away_score}
               </span>
               {isLive && game.time_elapsed && game.time_elapsed !== 'notstarted' && (
