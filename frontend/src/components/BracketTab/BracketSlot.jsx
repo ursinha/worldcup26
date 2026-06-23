@@ -42,10 +42,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               showGroup={showGroup}
             />
             {isNotStarted && matchDate && (
-              <>
-                <div className={styles.divider} />
-                <div className={styles.matchDate}>{matchDate} · {matchTime} BRT</div>
-              </>
+              <div className={styles.matchDate}>{matchDate} · {matchTime} BRT</div>
             )}
           </>
         ) : (
