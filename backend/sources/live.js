@@ -1,7 +1,7 @@
 const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 
 export const id = 'live';
-export const intervals = { live: 15 * 60_000, idle: null }; // only poll when live
+export const intervals = { live: 15 * 60_000, idle: null };
 
 function normalize(name) {
   return (name ?? '').toLowerCase().trim();
@@ -14,6 +14,7 @@ function mapPeriod(statusType) {
   if (name === 'STATUS_SECOND_HALF') return '2';
   if (name.includes('EXTRA_TIME'))   return 'ET';
   if (name.includes('PENALTY'))      return 'PEN';
+  if (name === 'STATUS_FULL_TIME')   return 'FT';
   return null;
 }
 
@@ -34,12 +35,15 @@ function mapDetail(detail, homeId, awayId) {
   return null;
 }
 
-export async function fetchData() {
-  const res = await fetch(SCOREBOARD_URL);
+// date: optional 'YYYYMMDD' string for historical queries
+export async function fetchData(date = null) {
+  const url = date ? `${SCOREBOARD_URL}?dates=${date}` : SCOREBOARD_URL;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
+// Accepts both live ('in') and finished ('post') events
 export function extractUpdates(rawData, currentMatches) {
   const now = Date.now();
   const updates = [];
@@ -47,7 +51,8 @@ export function extractUpdates(rawData, currentMatches) {
   for (const event of rawData.events ?? []) {
     const comp   = event.competitions?.[0];
     const status = event.status;
-    if (!comp || status?.type?.state !== 'in') continue;
+    const state  = status?.type?.state;
+    if (!comp || (state !== 'in' && state !== 'post')) continue;
 
     const homeComp = comp.competitors?.find(c => c.homeAway === 'home');
     const awayComp = comp.competitors?.find(c => c.homeAway === 'away');
@@ -66,11 +71,13 @@ export function extractUpdates(rawData, currentMatches) {
     const homeId = homeComp.team?.id;
     const awayId = awayComp.team?.id;
     const events = (comp.details ?? []).map(d => mapDetail(d, homeId, awayId)).filter(Boolean);
+    const isPost = state === 'post';
 
     updates.push({
       id:            match.id,
-      clock:         status.displayClock ?? null,
-      clock_seconds: typeof status.clock === 'number' ? status.clock : null,
+      // don't store clock for finished matches — it's not used for display
+      clock:         isPost ? null : (status.displayClock ?? null),
+      clock_seconds: isPost ? null : (typeof status.clock === 'number' ? status.clock : null),
       period:        mapPeriod(status.type),
       events:        JSON.stringify(events),
       enriched_at:   now,
@@ -78,4 +85,12 @@ export function extractUpdates(rawData, currentMatches) {
   }
 
   return updates;
+}
+
+// Convert "MM/DD/YYYY HH:mm" → "YYYYMMDD" for ESPN date param
+export function toESPNDate(localDate) {
+  if (!localDate) return null;
+  const [datePart] = localDate.split(' ');
+  const [mm, dd, yyyy] = datePart.split('/');
+  return `${yyyy}${mm}${dd}`;
 }

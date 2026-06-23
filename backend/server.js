@@ -6,6 +6,7 @@ import { execSync } from 'child_process';
 import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums } from './db.js';
 import * as primary from './sources/primary.js';
 import * as live from './sources/live.js';
+import { toESPNDate } from './sources/live.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dir, '../frontend/dist');
@@ -95,6 +96,31 @@ async function pollLive() {
   scheduleLive();
 }
 
+// One-time backfill: fetch events for all finished matches that have none yet
+async function backfillEvents() {
+  const games   = cache.matches?.games ?? [];
+  const pending = games.filter(g => g.finished === 'TRUE' && !g.events);
+  if (!pending.length) return;
+
+  const dates = [...new Set(pending.map(g => toESPNDate(g.local_date)))].filter(Boolean);
+  console.log(`[${live.id}] backfilling ${pending.length} matches over ${dates.length} date(s)`);
+
+  for (const date of dates) {
+    try {
+      const raw     = await live.fetchData(date);
+      const updates = live.extractUpdates(raw, games);
+      if (updates.length) {
+        saveEnrichment(updates);
+        refreshCache();
+      }
+      console.log(`[${live.id}] backfilled ${updates.length} match(es) for ${date}`);
+    } catch (err) {
+      console.error(`[${live.id}] backfill error for ${date}:`, err.message);
+    }
+    await new Promise(r => setTimeout(r, 300)); // be polite between requests
+  }
+}
+
 function scheduleLive() {
   clearTimeout(liveTimer);
   if (!hasLiveMatch()) return;
@@ -116,7 +142,8 @@ try {
 }
 
 await pollPrimary();
-pollLive(); // first live sync runs immediately if live, then schedules itself
+pollLive();
+backfillEvents();
 
 // ---------------------------------------------------------------------------
 // Routes
