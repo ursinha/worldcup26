@@ -4,7 +4,7 @@ import { BRACKET_ROUNDS, THIRD_PLACE_ID, resolveSlot } from '../../utils/bracket
 import BracketSlot from './BracketSlot';
 import styles from './BracketTab.module.css';
 
-const BASE = 52; // px — height of one R32 slot; all other rounds are multiples
+const BASE = 68; // px — height of one R32 slot; all other rounds are multiples
 
 export default function BracketTab() {
   const { data: matchesData, loading } = usePolling('/api/matches', 15_000);

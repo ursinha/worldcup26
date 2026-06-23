@@ -42,7 +42,7 @@ function TeamRow({ resolved, label, score, isWinner, isLive }) {
   const { team, projected } = resolved ?? { team: null, projected: false };
 
   return (
-    <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${!team ? styles.unknown : ''}`}>
+    <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${!team ? styles.unknown : ''} ${team && !projected ? styles.confirmed : ''}`}>
       {team?.flag ? (
         <img className={styles.flag} src={team.flag} alt={team.name_en} loading="lazy" />
       ) : (

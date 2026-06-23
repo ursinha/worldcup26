@@ -15,7 +15,7 @@
 }
 
 .card {
-  width: 184px;
+  width: 220px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -32,13 +32,21 @@
 .team {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 7px;
-  height: 22px;
+  gap: 7px;
+  padding: 0 10px;
+  height: 28px;
+}
+
+.team.confirmed {
+  background: rgba(0, 224, 122, 0.13);
+  border-left: 3px solid var(--accent);
+  padding-left: 7px; /* compensate for border so text doesn't shift */
 }
 
 .team.winner {
-  background: var(--accent-dim);
+  background: rgba(0, 224, 122, 0.25);
+  border-left: 3px solid var(--accent);
+  padding-left: 7px;
 }
 
 .team.unknown {
@@ -46,16 +54,16 @@
 }
 
 .flag {
-  width: 18px;
-  height: 12px;
+  width: 22px;
+  height: 15px;
   object-fit: cover;
   border-radius: 1px;
   flex-shrink: 0;
 }
 
 .flagPlaceholder {
-  width: 18px;
-  height: 12px;
+  width: 22px;
+  height: 15px;
   background: var(--border);
   border-radius: 1px;
   flex-shrink: 0;
@@ -63,7 +71,7 @@
 
 .teamName {
   flex: 1;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--text-1);
   white-space: nowrap;
@@ -93,7 +101,7 @@
 
 .score {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-2);
   flex-shrink: 0;

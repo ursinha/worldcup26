@@ -4,20 +4,20 @@
   /* Dark (default) — high contrast */
   color-scheme: dark;
 
-  --bg:            #06081a;   /* page background */
-  --bg-top:        #04060f;   /* sticky bar / header */
-  --surface:       #0d1428;   /* card / table background */
-  --surface-hi:    #131c36;   /* elevated surface (table header, group title) */
-  --border:        #1e2d4e;   /* default border */
-  --border-hi:     #2c4070;   /* hover / active border */
-  --border-faint:  #0f1628;   /* intra-row dividers */
-  --text-1:        #f2f6ff;   /* primary text */
-  --text-2:        #8ba3cc;   /* secondary / metadata text */
-  --text-3:        #404f6e;   /* muted / placeholders */
+  --bg:            #0c1120;   /* page background — deep navy, not black */
+  --bg-top:        #080e1a;   /* sticky bar / header */
+  --surface:       #162035;   /* card / table background */
+  --surface-hi:    #1e2d48;   /* elevated surface (table header, group title) */
+  --border:        #2a3f62;   /* default border — clearly visible */
+  --border-hi:     #3e5a8a;   /* hover / active border */
+  --border-faint:  #182030;   /* intra-row dividers */
+  --text-1:        #f4f8ff;   /* primary text */
+  --text-2:        #a0b8df;   /* secondary / metadata text — brighter */
+  --text-3:        #5c7299;   /* muted / placeholders — more visible */
   --accent:        #00e07a;   /* green accent */
-  --accent-dim:    rgba(0, 224, 122, 0.10);
+  --accent-dim:    rgba(0, 224, 122, 0.12);
   --red:           #ff4040;   /* live / error */
-  --red-dim:       rgba(255, 64, 64, 0.14);
+  --red-dim:       rgba(255, 64, 64, 0.16);
   --score-color:   #ffffff;   /* big score numbers */
 }
 
@@ -42,6 +42,10 @@
 }
 
 /* ── Global resets ───────────────────────────────────────────────────────── */
+
+html {
+  font-size: 103%;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
