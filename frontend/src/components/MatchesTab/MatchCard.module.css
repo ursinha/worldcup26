@@ -297,27 +297,26 @@
   border-radius: 3px;
   overflow: hidden;
   display: flex;
-  gap: 2px;
-  background: transparent;
+  background: var(--border);
 }
 
 .predBarHome {
   height: 100%;
   background: var(--accent);
-  border-radius: 3px 0 0 3px;
+  flex-shrink: 0;
 }
 
 .predBarDraw {
   height: 100%;
   background: var(--border-hi);
+  flex-shrink: 0;
 }
 
 .predBarAway {
   height: 100%;
   background: var(--accent);
-  opacity: 0.5;
-  border-radius: 0 3px 3px 0;
-  margin-left: auto;
+  opacity: 0.55;
+  flex-shrink: 0;
 }
 
 .footer {

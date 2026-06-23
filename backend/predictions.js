@@ -65,7 +65,7 @@ export function computeRatings(games) {
 }
 
 const FALLBACK_RATING = { attack: 1, defense: 1 };
-const MAX_GOALS = 7; // consider 0–6 goals per side
+const MAX_GOALS = 11; // consider 0–10 goals per side (covers λ up to ~6)
 
 /**
  * Predict score probabilities for a single match.
@@ -114,13 +114,17 @@ export function predictMatch(homeId, awayId, model, oddsTotal = null) {
     prob: Math.round(s.prob * 1000) / 10, // % with 1 decimal
   }));
 
+  // Normalize so percentages always sum to 100 (the MAX_GOALS cutoff
+  // loses a small amount of probability mass for high-λ matches).
+  const total = winHome + winDraw + winAway || 1;
+
   return {
     pred_home:  top[0].home,
     pred_away:  top[0].away,
     pred_scores: JSON.stringify(top),
-    win_home:   Math.round(winHome * 1000) / 10,
-    win_draw:   Math.round(winDraw * 1000) / 10,
-    win_away:   Math.round(winAway * 1000) / 10,
+    win_home:   Math.round(winHome / total * 1000) / 10,
+    win_draw:   Math.round(winDraw / total * 1000) / 10,
+    win_away:   Math.round(winAway / total * 1000) / 10,
   };
 }
 
