@@ -142,7 +142,12 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
     return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
 
-  // "3rd Group A/B/…" – too complex to pin to a slot, show TBD
+  // "3rd Group A/B/…" – show candidate groups as badge
+  const tg = label.match(/^3rd Group (.+)$/);
+  if (tg) {
+    return { team: null, projected: true, group: tg[1] };
+  }
+
   return { team: null, projected: false, group: null };
 }
 
