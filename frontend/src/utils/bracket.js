@@ -118,10 +118,11 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       const team = teamMap[winnerId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    // Recurse to project winner from the source match
+    // Recurse to collect source groups from both sides
     const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
     const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
-    return { team: null, projected: true, group: homeR.group && awayR.group && homeR.group === awayR.group ? homeR.group : null };
+    const unique = [...new Set([homeR.group, awayR.group].filter(Boolean))];
+    return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
 
   // "Loser Match N" (3rd-place match)
@@ -135,7 +136,10 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       const team = teamMap[loserId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    return { team: null, projected: true, group: null };
+    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
+    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
+    const unique = [...new Set([homeR.group, awayR.group].filter(Boolean))];
+    return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
 
   // "3rd Group A/B/…" – too complex to pin to a slot, show TBD
