@@ -84,12 +84,26 @@ export default function MatchesTab() {
       groups[isoDate].games.push({ game, utc });
     }
 
+    const statusOrder = (game) => {
+      const s = matchStatus(game);
+      if (s === 'live')       return 0;
+      if (s === 'notstarted') return 1;
+      return 2; // finished
+    };
+
     // Sort groups by date, games within each group by time
+    // In the Today tab, finished matches go last
     return Object.values(groups)
       .sort((a, b) => a.isoDate.localeCompare(b.isoDate))
       .map((g) => ({
         ...g,
-        games: g.games.sort((a, b) => a.utc - b.utc).map((x) => x.game),
+        games: g.games.sort((a, b) => {
+          if (filter === 'today') {
+            const diff = statusOrder(a.game) - statusOrder(b.game);
+            if (diff !== 0) return diff;
+          }
+          return a.utc - b.utc;
+        }).map((x) => x.game),
       }));
   }, [filteredGames]);
 
