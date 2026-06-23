@@ -93,8 +93,12 @@ export default function MatchesTab() {
 
     // Sort groups by date, games within each group by time
     // In the Today tab, finished matches go last
+    // In the Finished tab, groups and games are sorted reverse-chronologically
+    const reverseDate = filter === 'finished';
     return Object.values(groups)
-      .sort((a, b) => a.isoDate.localeCompare(b.isoDate))
+      .sort((a, b) => reverseDate
+        ? b.isoDate.localeCompare(a.isoDate)
+        : a.isoDate.localeCompare(b.isoDate))
       .map((g) => ({
         ...g,
         games: g.games.sort((a, b) => {
@@ -102,7 +106,7 @@ export default function MatchesTab() {
             const diff = statusOrder(a.game) - statusOrder(b.game);
             if (diff !== 0) return diff;
           }
-          return a.utc - b.utc;
+          return reverseDate ? b.utc - a.utc : a.utc - b.utc;
         }).map((x) => x.game),
       }));
   }, [filteredGames]);

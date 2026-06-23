@@ -1,12 +1,21 @@
 /**
- * Poisson-based match score prediction.
+ * Poisson-based match score prediction with bookmaker calibration.
  *
- * Uses each team's attack and defense strength derived from finished
- * group stage results to estimate expected goals (λ) per side, then
- * computes a full score probability matrix via the Poisson distribution.
+ * Three calibration levels, applied in order of available data:
  *
- * Option 3 hook: pass oddsTotal to calibrate λ against a bookmaker
- * Over/Under line — the only change needed to upgrade from Option 1.
+ *  Level 3 (full)  — ou_line + h2h odds available:
+ *    Binary-search for the λ_home/λ_away ratio that makes
+ *    P(home wins | Poisson) == bookmaker h2h win probability,
+ *    while keeping λ_home + λ_away == ou_line.
+ *    Win/draw/away percentages taken directly from h2h odds.
+ *    Score chips come from the fully-calibrated Poisson grid.
+ *
+ *  Level 2 (partial) — only ou_line available:
+ *    Scale tournament-derived λ values so their sum == ou_line.
+ *    Win percentages from Poisson.
+ *
+ *  Level 1 (fallback) — no odds:
+ *    Pure tournament attack/defense ratings with Bayesian smoothing.
  */
 
 function poissonPmf(k, lambda) {
@@ -16,9 +25,31 @@ function poissonPmf(k, lambda) {
   return Math.exp(logP);
 }
 
+function homeWinProb(lh, la, maxGoals) {
+  let p = 0;
+  for (let h = 1; h < maxGoals; h++)
+    for (let a = 0; a < h; a++)
+      p += poissonPmf(h, lh) * poissonPmf(a, la);
+  return p;
+}
+
 /**
- * Derive attack / defense ratings from finished matches.
- * Returns null if there are not enough matches to compute meaningful ratings.
+ * Binary-search for the share r ∈ [0.05, 0.95] such that
+ * P(home wins | λ_h = r * total, λ_a = (1-r) * total) ≈ targetHomeWin.
+ */
+function findLambdaRatio(total, targetHomeWin, maxGoals) {
+  let lo = 0.05, hi = 0.95;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (homeWinProb(mid * total, (1 - mid) * total, maxGoals) > targetHomeWin) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/**
+ * Derive attack / defense ratings from finished group stage matches.
+ * Returns null if there are fewer than 2 finished games.
  */
 export function computeRatings(games) {
   const finished = games.filter(g => g.finished === 'TRUE' && g.type === 'group'
@@ -27,7 +58,7 @@ export function computeRatings(games) {
   if (finished.length < 2) return null;
 
   let totalGoals = 0;
-  const stats = {}; // teamId → { scored, conceded, games }
+  const stats = {};
 
   for (const g of finished) {
     const hs = +g.home_score;
@@ -46,12 +77,11 @@ export function computeRatings(games) {
     }
   }
 
-  const leagueAvg = totalGoals / (finished.length * 2); // per team per game
+  const leagueAvg = totalGoals / (finished.length * 2);
 
-  // Bayesian smoothing: add virtual games at the league average to prevent
-  // extreme ratings from small samples (e.g. a team with 0 goals conceded
-  // in one game getting a defense rating of 0, making opponents score 0).
-  const SMOOTH = 2; // virtual games added per team
+  // Bayesian smoothing: pull extreme ratings toward the mean,
+  // weighted by games played (more games → less smoothing).
+  const SMOOTH = 2;
 
   const ratings = {};
   for (const [id, s] of Object.entries(stats)) {
@@ -65,17 +95,20 @@ export function computeRatings(games) {
 }
 
 const FALLBACK_RATING = { attack: 1, defense: 1 };
-const MAX_GOALS = 11; // consider 0–10 goals per side (covers λ up to ~6)
+const MAX_GOALS = 11; // covers λ up to ~6 with <1% truncation
 
 /**
  * Predict score probabilities for a single match.
- * @param {string} homeId
- * @param {string} awayId
- * @param {{ ratings: object, leagueAvg: number }} model
- * @param {number|null} oddsTotal  Option 3: bookmaker O/U total (leave null for Option 1)
- * @returns {{ pred_home, pred_away, pred_scores, win_home, win_draw, win_away } | null}
+ *
+ * @param {string}      homeId
+ * @param {string}      awayId
+ * @param {object}      model       — from computeRatings()
+ * @param {number|null} ouLine      — bookmaker O/U total goals
+ * @param {number|null} h2hHome     — bookmaker home win % (0–100)
+ * @param {number|null} h2hDraw     — bookmaker draw %
+ * @param {number|null} h2hAway     — bookmaker away win %
  */
-export function predictMatch(homeId, awayId, model, oddsTotal = null) {
+export function predictMatch(homeId, awayId, model, ouLine = null, h2hHome = null, h2hDraw = null, h2hAway = null) {
   if (!model || !homeId || !awayId || homeId === '0' || awayId === '0') return null;
 
   const { ratings, leagueAvg } = model;
@@ -85,14 +118,24 @@ export function predictMatch(homeId, awayId, model, oddsTotal = null) {
   let lh = leagueAvg * homeR.attack * awayR.defense;
   let la = leagueAvg * awayR.attack * homeR.defense;
 
-  // Option 3 hook: scale λ to match bookmaker total
-  if (oddsTotal != null && lh + la > 0) {
-    const scale = oddsTotal / (lh + la);
+  const hasH2H   = h2hHome != null && h2hDraw != null && h2hAway != null;
+  const hasOuLine = ouLine != null;
+
+  if (hasOuLine && hasH2H) {
+    // Level 3: calibrate both total goals AND home/away split from bookmaker data
+    const targetHomeWin = h2hHome / 100;
+    const r = findLambdaRatio(ouLine, targetHomeWin, MAX_GOALS);
+    lh = r * ouLine;
+    la = (1 - r) * ouLine;
+  } else if (hasOuLine && lh + la > 0) {
+    // Level 2: scale total to match O/U, keep tournament-derived ratio
+    const scale = ouLine / (lh + la);
     lh *= scale;
     la *= scale;
   }
+  // Level 1: use raw tournament λ values as-is
 
-  // Build full score probability matrix
+  // Build score probability matrix
   const scores = [];
   let winHome = 0, winDraw = 0, winAway = 0;
 
@@ -107,24 +150,33 @@ export function predictMatch(homeId, awayId, model, oddsTotal = null) {
   }
 
   scores.sort((a, b) => b.prob - a.prob);
-
   const top = scores.slice(0, 5).map(s => ({
     home: s.home,
     away: s.away,
-    prob: Math.round(s.prob * 1000) / 10, // % with 1 decimal
+    prob: Math.round(s.prob * 1000) / 10,
   }));
 
-  // Normalize so percentages always sum to 100 (the MAX_GOALS cutoff
-  // loses a small amount of probability mass for high-λ matches).
-  const total = winHome + winDraw + winAway || 1;
+  // Win percentages: use h2h directly when available (bookmaker quality),
+  // otherwise normalize Poisson values to sum to 100%.
+  let finalWinHome, finalWinDraw, finalWinAway;
+  if (hasH2H) {
+    finalWinHome = h2hHome;
+    finalWinDraw = h2hDraw;
+    finalWinAway = h2hAway;
+  } else {
+    const total = winHome + winDraw + winAway || 1;
+    finalWinHome = Math.round(winHome / total * 1000) / 10;
+    finalWinDraw = Math.round(winDraw / total * 1000) / 10;
+    finalWinAway = Math.round(winAway / total * 1000) / 10;
+  }
 
   return {
-    pred_home:  top[0].home,
-    pred_away:  top[0].away,
+    pred_home:   top[0].home,
+    pred_away:   top[0].away,
     pred_scores: JSON.stringify(top),
-    win_home:   Math.round(winHome / total * 1000) / 10,
-    win_draw:   Math.round(winDraw / total * 1000) / 10,
-    win_away:   Math.round(winAway / total * 1000) / 10,
+    win_home:    finalWinHome,
+    win_draw:    finalWinDraw,
+    win_away:    finalWinAway,
   };
 }
 
@@ -144,8 +196,13 @@ export function computeAllPredictions(games) {
 
   const rows = [];
   for (const g of upcoming) {
-    // Pass ou_line if available — calibrates λ against bookmaker O/U total
-    const pred = predictMatch(g.home_team_id, g.away_team_id, model, g.ou_line ?? null);
+    const pred = predictMatch(
+      g.home_team_id, g.away_team_id, model,
+      g.ou_line  ?? null,
+      g.h2h_home ?? null,
+      g.h2h_draw ?? null,
+      g.h2h_away ?? null,
+    );
     if (!pred) continue;
     rows.push({ id: g.id, ...pred, pred_updated_at: now });
   }

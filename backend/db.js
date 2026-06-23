@@ -86,6 +86,9 @@ db.exec(`
     ['win_away',        'REAL'],
     ['pred_updated_at', 'INTEGER'],
     ['ou_line',         'REAL'],
+    ['h2h_home',        'REAL'],
+    ['h2h_draw',        'REAL'],
+    ['h2h_away',        'REAL'],
   ];
   for (const [col, type] of toAdd) {
     if (!cols.includes(col)) {
@@ -156,10 +159,13 @@ const _upsertPrediction = db.prepare(`
 `);
 
 const _upsertOdds = db.prepare(`
-  INSERT INTO matches (id, ou_line)
-  VALUES (@id, @ou_line)
+  INSERT INTO matches (id, ou_line, h2h_home, h2h_draw, h2h_away)
+  VALUES (@id, @ou_line, @h2h_home, @h2h_draw, @h2h_away)
   ON CONFLICT(id) DO UPDATE SET
-    ou_line = excluded.ou_line
+    ou_line  = COALESCE(excluded.ou_line,  ou_line),
+    h2h_home = COALESCE(excluded.h2h_home, h2h_home),
+    h2h_draw = COALESCE(excluded.h2h_draw, h2h_draw),
+    h2h_away = COALESCE(excluded.h2h_away, h2h_away)
 `);
 
 const _upsertGroup   = db.prepare('INSERT INTO groups_tbl (name, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
@@ -210,6 +216,9 @@ function rowToGame(row) {
     win_draw:          row.win_draw      ?? null,
     win_away:          row.win_away      ?? null,
     ou_line:           row.ou_line       ?? null,
+    h2h_home:          row.h2h_home      ?? null,
+    h2h_draw:          row.h2h_draw      ?? null,
+    h2h_away:          row.h2h_away      ?? null,
   };
 }
 
