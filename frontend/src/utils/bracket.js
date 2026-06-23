@@ -136,13 +136,9 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       const team = teamMap[loserId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    // Resolve the two SF participants to get their groups
     const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
     const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
-    const unique = [...new Set([
-      homeR.team?.groups?.[0] ?? homeR.group,
-      awayR.team?.groups?.[0] ?? awayR.group,
-    ].filter(Boolean))];
+    const unique = [...new Set([homeR.group, awayR.group].filter(Boolean))];
     return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
 
