@@ -129,6 +129,32 @@
   letter-spacing: 0.05em;
 }
 
+.scorers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border-faint);
+}
+
+.scorerCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.scorerColAway {
+  text-align: right;
+}
+
+.scorer {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .footer {
   display: flex;
   align-items: center;

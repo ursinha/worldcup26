@@ -1,5 +1,5 @@
 import { gameToUTC, formatBRT } from '../../utils/time';
-import { matchStatus, stageLabel } from '../../utils/parsers';
+import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
 import styles from './MatchCard.module.css';
 
 function TeamSide({ name, flag, side }) {
@@ -22,6 +22,10 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
 
   const utcDate = gameToUTC(game.local_date, game.stadium_id);
   const { time: kickoffBRT } = formatBRT(utcDate);
+
+  const homeScorers = (isFinished || isLive) ? parseScorers(game.home_scorers) : [];
+  const awayScorers = (isFinished || isLive) ? parseScorers(game.away_scorers) : [];
+  const hasScorers = homeScorers.length > 0 || awayScorers.length > 0;
 
   return (
     <div className={`${styles.card} ${isLive ? styles.live : ''}`}>
@@ -61,6 +65,18 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
 
         <TeamSide name={game.away_team_name_en} flag={awayTeam?.flag} side="away" />
       </div>
+
+      {/* Scorers */}
+      {hasScorers && (
+        <div className={styles.scorers}>
+          <div className={styles.scorerCol}>
+            {homeScorers.map((s, i) => <span key={i} className={styles.scorer}>⚽ {s}</span>)}
+          </div>
+          <div className={`${styles.scorerCol} ${styles.scorerColAway}`}>
+            {awayScorers.map((s, i) => <span key={i} className={styles.scorer}>{s} ⚽</span>)}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className={styles.footer}>
