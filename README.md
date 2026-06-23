@@ -2,7 +2,7 @@
 
 A local web app to follow the 2026 FIFA World Cup in real time.
 
-- **Backend**: Node.js + Express, polls `worldcup26.ir` every 10 s, caches data in memory
+- **Backend**: Node.js + Express, polls external sources on an adaptive schedule, persists data in SQLite
 - **Frontend**: Vite + React, polls the backend every 15 s, all times shown in Brasília time (BRT)
 
 ---
@@ -45,32 +45,17 @@ npm run dev
 
 ## Polling and rate limiting
 
-The backend polls `worldcup26.ir` **once every 10 seconds while a match is live** and **once every 2 hours when idle**. Only one request is made per cycle (matches only; groups, teams and stadiums are fetched once at startup).
+The backend uses an adaptive polling schedule: **every 10 seconds while a match is live**, **every 2 hours when idle**. Static data (groups, teams, stadiums) is fetched once at startup. A secondary source syncs live match enrichment data (clock, events) every 15 minutes during live matches.
 
-**Please be mindful of the upstream service.** `worldcup26.ir` is a free, unofficial API. Do not reduce the polling intervals below what is configured, run multiple instances pointing at the same source, or deploy this publicly in a way that could generate high traffic against it. If the service starts returning errors, increase the idle interval or switch to an alternative source.
+**Please be mindful of upstream services.** Do not reduce the polling intervals below what is configured or run multiple instances pointing at the same sources.
 
 ---
 
-## Swapping the data source
+## Data sources
 
-The upstream URL is defined as a single constant at the top of `backend/server.js`:
+Sources are defined as modules under `backend/sources/`. Each exports `id`, `intervals`, `fetchData()`, and `extractUpdates()`. The server runs each source on its own timer and merges results into a shared SQLite schema — the match object is the canonical representation, built from all contributors.
 
-```js
-const SOURCE_BASE = 'https://worldcup26.ir';
-```
-
-The backend fetches three paths from that base:
-
-```
-GET <SOURCE_BASE>/get/games
-GET <SOURCE_BASE>/get/groups
-GET <SOURCE_BASE>/get/teams
-GET <SOURCE_BASE>/get/stadiums
-```
-
-To swap the source, change `SOURCE_BASE` (and if the paths differ, update the four `fetchJson` calls in the `poll` function).
-
-The frontend never talks to the upstream directly — all requests go through `/api/*` which the Vite dev server proxies to `http://localhost:3001`.
+To add or swap a source, add a new file under `backend/sources/` following the same interface.
 
 ---
 
@@ -79,8 +64,12 @@ The frontend never talks to the upstream directly — all requests go through `/
 ```
 worldcup/
 ├── backend/
+│   ├── db.js               # SQLite schema, upserts, reads
+│   ├── sources/
+│   │   ├── primary.js      # Base match data
+│   │   └── live.js         # Live clock + match events
 │   ├── package.json        # ESM, "type": "module"
-│   └── server.js           # Express + polling + cache
+│   └── server.js           # Express + polling orchestration
 └── frontend/
     ├── vite.config.js      # Proxy /api → :3001
     └── src/

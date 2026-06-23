@@ -165,6 +165,57 @@
   text-overflow: ellipsis;
 }
 
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border-faint);
+}
+
+.cardCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cardColAway {
+  text-align: right;
+}
+
+.cardEntry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardColAway .cardEntry {
+  flex-direction: row-reverse;
+}
+
+.yellowCard {
+  display: inline-block;
+  width: 8px;
+  height: 11px;
+  background: #f5c518;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.redCard {
+  display: inline-block;
+  width: 8px;
+  height: 11px;
+  background: var(--red);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
 .footer {
   display: flex;
   align-items: center;
