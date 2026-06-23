@@ -2,7 +2,7 @@ import { shortLabel } from '../../utils/bracket';
 import styles from './BracketSlot.module.css';
 
 // slotHeight: the vertical cell height (px) that aligns this slot in the bracket
-export default function BracketSlot({ game, homeResolved, awayResolved, slotHeight, hasConnector }) {
+export default function BracketSlot({ game, homeResolved, awayResolved, slotHeight, hasConnector, showGroup = true }) {
   const isFinished = game?.finished === 'TRUE';
   const isLive =
     game?.finished === 'FALSE' && game?.time_elapsed !== 'notstarted';
@@ -21,6 +21,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               score={isFinished || isLive ? game.home_score : null}
               isWinner={isFinished && +game.home_score > +game.away_score}
               isLive={isLive}
+              showGroup={showGroup}
             />
             <div className={styles.divider} />
             <TeamRow
@@ -28,6 +29,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               label={game.away_team_label}
               score={isFinished || isLive ? game.away_score : null}
               isWinner={isFinished && +game.away_score > +game.home_score}
+              showGroup={showGroup}
             />
           </>
         ) : (
@@ -38,7 +40,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
   );
 }
 
-function TeamRow({ resolved, label, score, isWinner, isLive }) {
+function TeamRow({ resolved, label, score, isWinner, isLive, showGroup }) {
   const { team, projected, group } = resolved ?? { team: null, projected: false, group: null };
 
   return (
@@ -54,7 +56,7 @@ function TeamRow({ resolved, label, score, isWinner, isLive }) {
         {team?.name_en ?? shortLabel(label)}
         {projected && team && <span className={styles.projBadge}> proj</span>}
       </span>
-      {group && <span className={styles.groupBadge}>{group}</span>}
+      {showGroup && group && <span className={styles.groupBadge}>{group}</span>}
       {isLive && <span className={styles.liveBadge}>AO VIVO</span>}
       {score !== null && (
         <span className={`${styles.score} ${isWinner ? styles.winner : ''}`}>{score}</span>
