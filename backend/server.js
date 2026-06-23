@@ -138,7 +138,13 @@ app.get('/api/status', (_req, res) => res.json({
   commit:      COMMIT,
 }));
 
-app.use(express.static(DIST));
+app.use(express.static(DIST, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 app.get('*', (_req, res) => res.sendFile(join(DIST, 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Server on http://0.0.0.0:${PORT}`));
