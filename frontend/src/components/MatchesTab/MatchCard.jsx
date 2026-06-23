@@ -50,7 +50,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         {isLive && (
           <span className={styles.liveBadge}>
             <span className={styles.liveDot} />
-            AO VIVO {game.time_elapsed !== 'notstarted' ? `· ${game.time_elapsed}` : ''}
+            AO VIVO {/\d/.test(game.time_elapsed) ? `· ${game.time_elapsed}` : ''}
           </span>
         )}
         {isFinished && <span>Encerrado</span>}
@@ -66,7 +66,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
               <span className={`${styles.score} ${scorePulse ? styles.scorePulse : ''}`}>
                 {game.home_score} – {game.away_score}
               </span>
-              {isLive && game.time_elapsed && game.time_elapsed !== 'notstarted' && (
+              {isLive && /\d/.test(game.time_elapsed) && (
                 <span className={styles.elapsed}>{game.time_elapsed}</span>
               )}
             </>
