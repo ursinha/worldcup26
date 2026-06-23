@@ -38,8 +38,15 @@ function MoonIcon() {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('matches');
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem('wc-tab') ?? 'matches',
+  );
   const { theme, toggle } = useTheme();
+
+  function handleTabChange(key) {
+    setActiveTab(key);
+    localStorage.setItem('wc-tab', key);
+  }
 
   return (
     <div className={styles.app}>
@@ -49,7 +56,7 @@ export default function App() {
           <button
             key={key}
             className={`${styles.tab} ${activeTab === key ? styles.active : ''}`}
-            onClick={() => setActiveTab(key)}
+            onClick={() => handleTabChange(key)}
           >
             {label}
           </button>

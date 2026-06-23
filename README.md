@@ -43,6 +43,14 @@ npm run dev
 
 ---
 
+## Polling and rate limiting
+
+The backend polls `worldcup26.ir` **once every 10 seconds while a match is live** and **once every 2 hours when idle**. Only one request is made per cycle (matches only; groups, teams and stadiums are fetched once at startup).
+
+**Please be mindful of the upstream service.** `worldcup26.ir` is a free, unofficial API. Do not reduce the polling intervals below what is configured, run multiple instances pointing at the same source, or deploy this publicly in a way that could generate high traffic against it. If the service starts returning errors, increase the idle interval or switch to an alternative source.
+
+---
+
 ## Swapping the data source
 
 The upstream URL is defined as a single constant at the top of `backend/server.js`:
