@@ -6,11 +6,11 @@ import MatchCard from './MatchCard';
 import styles from './MatchesTab.module.css';
 
 const FILTERS = [
-  { key: 'all', label: 'Todos' },
-  { key: 'live', label: 'Ao Vivo' },
-  { key: 'today', label: 'Hoje' },
+  { key: 'live',     label: 'Ao Vivo' },
+  { key: 'today',    label: 'Hoje' },
   { key: 'upcoming', label: 'Próximos' },
   { key: 'finished', label: 'Encerrados' },
+  { key: 'all',      label: 'Todos' },
 ];
 
 export default function MatchesTab() {
