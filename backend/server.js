@@ -179,4 +179,13 @@ app.use(express.static(DIST, {
 }));
 app.get('*', (_req, res) => res.sendFile(join(DIST, 'index.html')));
 
-app.listen(PORT, '0.0.0.0', () => console.log(`Server on http://0.0.0.0:${PORT}`));
+const server = app.listen(PORT, '0.0.0.0', () => console.log(`Server on http://0.0.0.0:${PORT}`));
+
+// Graceful shutdown so pm2 reload releases the port before the new process starts
+function shutdown() {
+  clearTimeout(primaryTimer);
+  clearTimeout(liveTimer);
+  server.close(() => process.exit(0));
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT',  shutdown);

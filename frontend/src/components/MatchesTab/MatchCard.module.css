@@ -219,45 +219,107 @@
 .prediction {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
   padding-top: 0.4rem;
   border-top: 1px solid var(--border-faint);
 }
 
+.predHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .predLabel {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .predScores {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .predScore {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-2);
   font-family: 'JetBrains Mono', monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
 }
 
 .predScore.predTop {
   color: var(--text-1);
   font-weight: 700;
+  border-color: var(--border-hi);
 }
 
 .predProb {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--text-3);
+}
+
+/* Probability bar */
+.predBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.predTeam {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 2.4rem;
+  letter-spacing: 0.04em;
+}
+
+.predTeam:last-child {
+  text-align: right;
+}
+
+.predBarTrack {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  background: var(--border);
+}
+
+.predBarHome {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.predBarDraw {
+  height: 100%;
+  background: color-mix(in srgb, var(--text-3) 50%, transparent);
+  transition: width 0.3s ease;
+}
+
+.predBarAway {
+  height: 100%;
+  background: #d97706;
+  transition: width 0.3s ease;
 }
 
 .predOutcomes {
   display: flex;
-  gap: 1rem;
-  font-size: 0.68rem;
+  justify-content: space-between;
+  font-size: 0.63rem;
   color: var(--text-3);
 }
 

@@ -151,18 +151,29 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
       {/* Prediction — upcoming only */}
       {status === 'notstarted' && game.pred_scores && (
         <div className={styles.prediction}>
-          <span className={styles.predLabel}>Placar estimado</span>
-          <div className={styles.predScores}>
-            {game.pred_scores.map((s, i) => (
-              <span key={i} className={`${styles.predScore} ${i === 0 ? styles.predTop : ''}`}>
-                {s.home}–{s.away} <span className={styles.predProb}>{s.prob}%</span>
-              </span>
-            ))}
+          <div className={styles.predHeader}>
+            <span className={styles.predLabel}>Placar estimado</span>
+            <div className={styles.predScores}>
+              {game.pred_scores.slice(0, 3).map((s, i) => (
+                <span key={i} className={`${styles.predScore} ${i === 0 ? styles.predTop : ''}`}>
+                  {s.home}–{s.away} <span className={styles.predProb}>{s.prob}%</span>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className={styles.predBar}>
+            <span className={styles.predTeam}>{game.home_team_label}</span>
+            <div className={styles.predBarTrack}>
+              <div className={styles.predBarHome} style={{ width: `${game.win_home}%` }} />
+              <div className={styles.predBarDraw} style={{ width: `${game.win_draw}%` }} />
+              <div className={styles.predBarAway} style={{ width: `${game.win_away}%` }} />
+            </div>
+            <span className={styles.predTeam}>{game.away_team_label}</span>
           </div>
           <div className={styles.predOutcomes}>
-            <span>Casa {game.win_home}%</span>
+            <span>{game.win_home}%</span>
             <span>Empate {game.win_draw}%</span>
-            <span>Fora {game.win_away}%</span>
+            <span>{game.win_away}%</span>
           </div>
         </div>
       )}
