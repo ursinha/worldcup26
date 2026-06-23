@@ -2,9 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dir, '../frontend/dist');
+
+let COMMIT = 'unknown';
+try { COMMIT = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch {}
+
 
 const app = express();
 const PORT = 3001;
@@ -105,6 +110,7 @@ app.get('/api/status', (_req, res) => {
     lastUpdated: cache.lastUpdated,
     lastError: cache.lastError,
     live: hasLiveMatch(),
+    commit: COMMIT,
   });
 });
 

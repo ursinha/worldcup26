@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import StatusBar from './components/StatusBar';
+import Footer from './components/Footer';
 import MatchesTab from './components/MatchesTab/MatchesTab';
 import GroupsTab from './components/GroupsTab/GroupsTab';
 import BracketTab from './components/BracketTab/BracketTab';
@@ -67,6 +68,7 @@ export default function App() {
         {activeTab === 'groups' && <GroupsTab />}
         {activeTab === 'bracket' && <BracketTab />}
       </div>
+      <Footer />
     </div>
   );
 }
