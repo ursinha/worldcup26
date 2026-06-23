@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { gameToUTC, formatBRT, todayBRT } from '../../utils/time';
 import { matchStatus } from '../../utils/parsers';
@@ -14,17 +14,25 @@ const FILTERS = [
 ];
 
 export default function MatchesTab() {
-  const [filter, setFilter] = useState('today');
+  const [filter, setFilter] = useState('live');
   const [matchInterval, setMatchInterval] = useState(15_000);
+  const initialFilterSet = useRef(false);
 
   const { data: matchesData, loading: matchesLoading } = usePolling('/api/matches', matchInterval);
 
   // Speed up polling to 5s while any match is live
   useEffect(() => {
-    const hasLive = matchesData?.games?.some(
+    if (!matchesData?.games) return;
+    const hasLive = matchesData.games.some(
       (g) => g.finished === 'FALSE' && g.time_elapsed !== 'notstarted',
-    ) ?? false;
+    );
     setMatchInterval(hasLive ? 5_000 : 15_000);
+
+    // Set default filter once on first load
+    if (!initialFilterSet.current) {
+      initialFilterSet.current = true;
+      if (!hasLive) setFilter('today');
+    }
   }, [matchesData]);
   const { data: teamsData } = usePolling('/api/teams', 60_000);
   const { data: stadiumsData } = usePolling('/api/stadiums', 300_000);
