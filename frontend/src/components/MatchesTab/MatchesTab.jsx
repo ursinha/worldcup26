@@ -105,6 +105,8 @@ export default function MatchesTab() {
           if (filter === 'today') {
             const diff = statusOrder(a.game) - statusOrder(b.game);
             if (diff !== 0) return diff;
+            // Finished section in Today tab: most recent first
+            if (matchStatus(a.game) === 'finished') return b.utc - a.utc;
           }
           return reverseDate ? b.utc - a.utc : a.utc - b.utc;
         }).map((x) => x.game),
