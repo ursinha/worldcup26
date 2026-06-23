@@ -45,6 +45,10 @@
   color: var(--border-hi);
 }
 
+.updated {
+  margin-left: auto;
+}
+
 .time {
   font-family: 'JetBrains Mono', monospace;
 }

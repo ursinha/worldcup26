@@ -13,8 +13,7 @@ export default function StatusBar() {
     <div className={styles.bar}>
       <span className={`${styles.dot} ${ok ? styles.ok : styles.error}`} />
       <span className={styles.label}>2026 FIFA World Cup</span>
-      <span className={styles.sep}>·</span>
-      <span>Última atualização: <span className={styles.time}>{lastUpdated} BRT</span></span>
+      <span className={styles.updated}>Última atualização: <span className={styles.time}>{lastUpdated} BRT</span></span>
       {!ok && errMsg && (
         <>
           <span className={styles.sep}>·</span>
