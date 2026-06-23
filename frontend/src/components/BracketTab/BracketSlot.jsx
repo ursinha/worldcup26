@@ -1,4 +1,5 @@
 import { shortLabel } from '../../utils/bracket';
+import { gameToUTC, formatBRT } from '../../utils/time';
 import styles from './BracketSlot.module.css';
 
 // slotHeight: the vertical cell height (px) that aligns this slot in the bracket
@@ -6,6 +7,15 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
   const isFinished = game?.finished === 'TRUE';
   const isLive =
     game?.finished === 'FALSE' && game?.time_elapsed !== 'notstarted';
+  const isNotStarted = game?.finished === 'FALSE' && game?.time_elapsed === 'notstarted';
+
+  let matchDate = null, matchTime = null;
+  if (game?.local_date && game?.stadium_id) {
+    const utc = gameToUTC(game.local_date, game.stadium_id);
+    const fmt = formatBRT(utc);
+    matchDate = fmt.date.slice(0, 5); // "29/06"
+    matchTime = fmt.time;             // "16:00"
+  }
 
   return (
     <div
@@ -31,6 +41,12 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               isWinner={isFinished && +game.away_score > +game.home_score}
               showGroup={showGroup}
             />
+            {isNotStarted && matchDate && (
+              <>
+                <div className={styles.divider} />
+                <div className={styles.matchDate}>{matchDate} · {matchTime} BRT</div>
+              </>
+            )}
           </>
         ) : (
           <span className={styles.tbd}>TBD</span>

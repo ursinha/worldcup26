@@ -126,6 +126,14 @@
   padding: 4px 0;
 }
 
+.matchDate {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--text-3);
+  padding: 3px 0;
+  letter-spacing: 0.02em;
+}
+
 .groupBadge {
   font-size: 0.6rem;
   font-weight: 700;
