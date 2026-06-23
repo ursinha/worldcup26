@@ -5,10 +5,10 @@
  *
  *  Level 3 (full)  — ou_line + h2h odds available:
  *    Binary-search for the λ_home/λ_away ratio that makes
- *    P(home wins | Poisson) == bookmaker h2h win probability,
+ *    P(home wins | DC-Poisson) == bookmaker h2h win probability,
  *    while keeping λ_home + λ_away == ou_line.
  *    Win/draw/away percentages taken directly from h2h odds.
- *    Score chips come from the fully-calibrated Poisson grid.
+ *    Score chips come from the fully-calibrated DC-Poisson grid.
  *
  *  Level 2 (partial) — only ou_line available:
  *    Scale tournament-derived λ values so their sum == ou_line.
@@ -25,11 +25,31 @@ function poissonPmf(k, lambda) {
   return Math.exp(logP);
 }
 
+/**
+ * Dixon-Coles correction factor for low-scoring outcomes.
+ * ρ < 0 increases 0-0 and 1-1 probability while decreasing 1-0 and 0-1,
+ * correcting the standard Poisson model's known mispricing of these scores.
+ * Mathematically designed to preserve the total probability sum.
+ */
+const RHO = -0.1;
+
+function dcTau(h, a, lh, la) {
+  if (h === 0 && a === 0) return 1 - lh * la * RHO;
+  if (h === 1 && a === 0) return 1 + la * RHO;
+  if (h === 0 && a === 1) return 1 + lh * RHO;
+  if (h === 1 && a === 1) return 1 - RHO;
+  return 1;
+}
+
+function dcPmf(h, a, lh, la) {
+  return poissonPmf(h, lh) * poissonPmf(a, la) * dcTau(h, a, lh, la);
+}
+
 function homeWinProb(lh, la, maxGoals) {
   let p = 0;
   for (let h = 1; h < maxGoals; h++)
     for (let a = 0; a < h; a++)
-      p += poissonPmf(h, lh) * poissonPmf(a, la);
+      p += dcPmf(h, a, lh, la);
   return p;
 }
 
@@ -141,7 +161,7 @@ export function predictMatch(homeId, awayId, model, ouLine = null, h2hHome = nul
 
   for (let h = 0; h < MAX_GOALS; h++) {
     for (let a = 0; a < MAX_GOALS; a++) {
-      const prob = poissonPmf(h, lh) * poissonPmf(a, la);
+      const prob = dcPmf(h, a, lh, la);
       scores.push({ home: h, away: a, prob });
       if (h > a) winHome += prob;
       else if (h === a) winDraw += prob;
