@@ -78,7 +78,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         <span>
           {game.type === 'group'
             ? `Grupo ${game.group} · ${shortDate}`
-            : `${stageLabel(game)} · ${shortDate} · ${kickoffBRT} BRT`}
+            : stageLabel(game)}
         </span>
         {isLive && (
           <span className={styles.liveBadge}>
