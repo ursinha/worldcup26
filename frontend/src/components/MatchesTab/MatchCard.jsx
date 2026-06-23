@@ -78,7 +78,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         {isLive && (
           <span className={styles.liveBadge}>
             <span className={styles.liveDot} />
-            AO VIVO{clock ? ` · ${clock}` : ''}
+            AO VIVO
           </span>
         )}
         {isFinished && <span>Encerrado</span>}
