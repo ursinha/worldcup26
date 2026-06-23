@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme } from './hooks/useTheme';
+import { useAutoReload } from './hooks/useAutoReload';
 import StatusBar from './components/StatusBar';
 import Footer from './components/Footer';
 import MatchesTab from './components/MatchesTab/MatchesTab';
@@ -42,6 +43,7 @@ export default function App() {
     () => localStorage.getItem('wc-tab') ?? 'matches',
   );
   const { theme, toggle } = useTheme();
+  useAutoReload();
 
   function handleTabChange(key) {
     setActiveTab(key);
