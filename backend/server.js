@@ -38,20 +38,26 @@ async function fetchJson(path) {
   return res.json();
 }
 
+// Fetch static data once at startup
+try {
+  const [groups, teams, stadiums] = await Promise.all([
+    fetchJson('/get/groups'),
+    fetchJson('/get/teams'),
+    fetchJson('/get/stadiums'),
+  ]);
+  cache.groups = groups;
+  cache.teams = teams;
+  cache.stadiums = stadiums;
+  console.log('[init] static data loaded');
+} catch (err) {
+  console.error('[init error]', err.message);
+}
+
 let pollTimer = null;
 
 async function poll() {
   try {
-    const [matches, groups, teams, stadiums] = await Promise.all([
-      fetchJson('/get/games'),
-      fetchJson('/get/groups'),
-      fetchJson('/get/teams'),
-      fetchJson('/get/stadiums'),
-    ]);
-    cache.matches = matches;
-    cache.groups = groups;
-    cache.teams = teams;
-    cache.stadiums = stadiums;
+    cache.matches = await fetchJson('/get/games');
     cache.lastUpdated = new Date().toISOString();
     cache.lastError = null;
   } catch (err) {
@@ -70,7 +76,7 @@ function scheduleNext() {
   pollTimer = setTimeout(poll, interval);
 }
 
-// Initial poll, then adaptive schedule
+// Initial matches poll, then adaptive schedule
 await poll();
 
 app.get('/api/matches', (_req, res) => {
