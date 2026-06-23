@@ -3,8 +3,21 @@ const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fif
 export const id = 'live';
 export const intervals = { live: 15 * 60_000, idle: null };
 
+// ESPN uses different names for some teams; map to our primary source names
+const NAME_ALIASES = {
+  'czechia':                        'czech republic',
+  'türkiye':                        'turkey',
+  'bosnia-herzegovina':             'bosnia and herzegovina',
+  'congo dr':                       'democratic republic of the congo',
+  'usa':                            'united states',
+  'republic of ireland':            'ireland',
+  'south korea':                    'korea republic',
+  'ivory coast':                    "côte d'ivoire",
+};
+
 function normalize(name) {
-  return (name ?? '').toLowerCase().trim();
+  const n = (name ?? '').toLowerCase().trim();
+  return NAME_ALIASES[n] ?? n;
 }
 
 function mapPeriod(statusType) {
