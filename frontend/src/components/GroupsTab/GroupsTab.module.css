@@ -12,6 +12,6 @@
 
 .loading {
   text-align: center;
-  color: #4a5578;
+  color: var(--text-3);
   padding: 4rem 0;
 }

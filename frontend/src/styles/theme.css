@@ -1,0 +1,59 @@
+/* ── Design tokens ── applied globally via data-theme on <html> ───────────── */
+
+:root {
+  /* Dark (default) — high contrast */
+  color-scheme: dark;
+
+  --bg:            #06081a;   /* page background */
+  --bg-top:        #04060f;   /* sticky bar / header */
+  --surface:       #0d1428;   /* card / table background */
+  --surface-hi:    #131c36;   /* elevated surface (table header, group title) */
+  --border:        #1e2d4e;   /* default border */
+  --border-hi:     #2c4070;   /* hover / active border */
+  --border-faint:  #0f1628;   /* intra-row dividers */
+  --text-1:        #f2f6ff;   /* primary text */
+  --text-2:        #8ba3cc;   /* secondary / metadata text */
+  --text-3:        #404f6e;   /* muted / placeholders */
+  --accent:        #00e07a;   /* green accent */
+  --accent-dim:    rgba(0, 224, 122, 0.10);
+  --red:           #ff4040;   /* live / error */
+  --red-dim:       rgba(255, 64, 64, 0.14);
+  --score-color:   #ffffff;   /* big score numbers */
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg:            #eef1f9;
+  --bg-top:        #e3e8f4;
+  --surface:       #ffffff;
+  --surface-hi:    #f3f6fc;
+  --border:        #cdd5e8;
+  --border-hi:     #a6b4d0;
+  --border-faint:  #e2e7f2;
+  --text-1:        #0a1125;
+  --text-2:        #3a4d70;
+  --text-3:        #7a8aaa;
+  --accent:        #007538;
+  --accent-dim:    rgba(0, 117, 56, 0.09);
+  --red:           #c71515;
+  --red-dim:       rgba(199, 21, 21, 0.10);
+  --score-color:   #0a1125;
+}
+
+/* ── Global resets ───────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}

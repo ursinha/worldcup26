@@ -4,7 +4,10 @@ import cors from 'cors';
 const app = express();
 const PORT = 3001;
 const SOURCE_BASE = 'https://worldcup26.ir';
-const POLL_INTERVAL = 10_000;
+
+// Adaptive poll intervals
+const INTERVAL_LIVE = 10_000;           // 10 s — a match is in progress
+const INTERVAL_IDLE = 2 * 60 * 60_000; // 2 h  — no live matches
 
 app.use(cors());
 app.use(express.json());
@@ -18,11 +21,19 @@ const cache = {
   lastError: null,
 };
 
+function hasLiveMatch() {
+  return (cache.matches?.games ?? []).some(
+    (g) => g.finished === 'FALSE' && g.time_elapsed !== 'notstarted',
+  );
+}
+
 async function fetchJson(path) {
   const res = await fetch(`${SOURCE_BASE}${path}`);
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
   return res.json();
 }
+
+let pollTimer = null;
 
 async function poll() {
   try {
@@ -42,11 +53,20 @@ async function poll() {
     cache.lastError = err.message;
     console.error('[poll error]', err.message);
   }
+
+  scheduleNext();
 }
 
-// Initial poll then schedule
+function scheduleNext() {
+  clearTimeout(pollTimer);
+  const interval = hasLiveMatch() ? INTERVAL_LIVE : INTERVAL_IDLE;
+  const label = hasLiveMatch() ? '10 s (live)' : '2 h (idle)';
+  console.log(`[poll] next in ${label}`);
+  pollTimer = setTimeout(poll, interval);
+}
+
+// Initial poll, then adaptive schedule
 await poll();
-setInterval(poll, POLL_INTERVAL);
 
 app.get('/api/matches', (_req, res) => {
   if (cache.matches === null) return res.status(503).json({ error: 'No data yet' });
@@ -73,6 +93,7 @@ app.get('/api/status', (_req, res) => {
     ok: cache.lastError === null,
     lastUpdated: cache.lastUpdated,
     lastError: cache.lastError,
+    live: hasLiveMatch(),
   });
 });
 

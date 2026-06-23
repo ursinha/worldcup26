@@ -1,52 +1,70 @@
-:global(*) {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-:global(body) {
-  background: #0b0f1e;
-  color: #cdd6f4;
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-.tabs {
+.tabRow {
   display: flex;
-  gap: 0;
+  align-items: center;
   padding: 0 1.25rem;
-  border-bottom: 1px solid #1a2040;
-  background: #0b0f1e;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  gap: 0;
 }
 
 .tab {
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #8892b0;
+  color: var(--text-2);
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   padding: 0.875rem 1.25rem;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   margin-bottom: -1px;
+  flex-shrink: 0;
 }
 
 .tab:hover {
-  color: #cdd6f4;
+  color: var(--text-1);
 }
 
 .tab.active {
-  color: #00d26a;
-  border-bottom-color: #00d26a;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Push the toggle to the far right */
+.themeToggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.3rem 0.7rem 0.3rem 0.55rem;
+  cursor: pointer;
+  color: var(--text-2);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.themeToggle:hover {
+  border-color: var(--border-hi);
+  color: var(--text-1);
+}
+
+.toggleIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .content {

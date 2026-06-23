@@ -1,0 +1,70 @@
+.outer {
+  padding: 1.25rem;
+  overflow-x: auto;
+  scrollbar-color: var(--border-hi) transparent;
+  scrollbar-width: thin;
+}
+
+.bracket {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  --bracket-gap: 24px;
+  --base: 52px;
+  gap: var(--bracket-gap);
+  min-width: max-content;
+}
+
+.roundCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.roundLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 0.5rem;
+  text-align: center;
+  width: 184px;
+}
+
+.pair {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.pair.hasConnector::after {
+  content: '';
+  position: absolute;
+  right: calc(-1 * var(--bracket-gap) / 2);
+  width: 0;
+  top: var(--pair-connector-top);
+  height: var(--pair-connector-h);
+  border-right: 1px solid var(--border-hi);
+}
+
+.thirdSection {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.thirdLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-3);
+  padding: 4rem 0;
+}

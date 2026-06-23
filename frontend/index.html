@@ -11,6 +11,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Apply saved theme before first paint to avoid flash -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('wc-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

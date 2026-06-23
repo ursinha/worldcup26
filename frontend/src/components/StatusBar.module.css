@@ -6,10 +6,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1.25rem;
-  background: #080c1a;
-  border-bottom: 1px solid #1a2040;
+  background: var(--bg-top);
+  border-bottom: 1px solid var(--border);
   font-size: 0.75rem;
-  color: #8892b0;
+  color: var(--text-2);
 }
 
 .dot {
@@ -20,29 +20,29 @@
 }
 
 .dot.ok {
-  background: #00d26a;
-  box-shadow: 0 0 6px #00d26a88;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
   animation: pulse 2s ease-in-out infinite;
 }
 
 .dot.error {
-  background: #ff3b3b;
-  box-shadow: 0 0 6px #ff3b3b88;
+  background: var(--red);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--red) 50%, transparent);
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50%       { opacity: 0.4; }
 }
 
 .label {
-  color: #cdd6f4;
+  color: var(--text-1);
   font-weight: 500;
 }
 
 .sep {
   margin: 0 0.25rem;
-  color: #2a3060;
+  color: var(--border-hi);
 }
 
 .time {
@@ -50,6 +50,6 @@
 }
 
 .errorMsg {
-  color: #ff3b3b;
+  color: var(--red);
   margin-left: 0.25rem;
 }

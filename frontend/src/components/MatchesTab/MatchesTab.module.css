@@ -12,27 +12,27 @@
 }
 
 .filterBtn {
-  background: #111827;
-  border: 1px solid #1e2a45;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: #8892b0;
+  color: var(--text-2);
   font-family: 'Inter', sans-serif;
   font-size: 0.8rem;
   font-weight: 500;
   padding: 0.35rem 0.9rem;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .filterBtn:hover {
-  border-color: #00d26a44;
-  color: #cdd6f4;
+  border-color: var(--border-hi);
+  color: var(--text-1);
 }
 
 .filterBtn.active {
-  background: #00d26a18;
-  border-color: #00d26a;
-  color: #00d26a;
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .dateGroup {
@@ -42,12 +42,12 @@
 .dateHeading {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #8892b0;
+  color: var(--text-2);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 0.75rem;
   padding-bottom: 0.4rem;
-  border-bottom: 1px solid #1a2040;
+  border-bottom: 1px solid var(--border);
 }
 
 .cards {
@@ -58,13 +58,13 @@
 
 .empty {
   text-align: center;
-  color: #4a5578;
+  color: var(--text-3);
   padding: 3rem 0;
   font-size: 0.9rem;
 }
 
 .loading {
   text-align: center;
-  color: #4a5578;
+  color: var(--text-3);
   padding: 4rem 0;
 }

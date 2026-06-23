@@ -1,0 +1,134 @@
+.slot {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.slot.connector::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--bracket-gap) / 2);
+  width: calc(var(--bracket-gap) / 2);
+  top: 50%;
+  height: 0;
+  border-top: 1px solid var(--border-hi);
+}
+
+.card {
+  width: 184px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.card.live {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1px var(--red-dim);
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px;
+  height: 22px;
+}
+
+.team.winner {
+  background: var(--accent-dim);
+}
+
+.team.unknown {
+  opacity: 0.4;
+}
+
+.flag {
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.flagPlaceholder {
+  width: 18px;
+  height: 12px;
+  background: var(--border);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.teamName {
+  flex: 1;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.teamName.winner {
+  color: var(--score-color);
+  font-weight: 700;
+}
+
+.teamName.projected {
+  color: var(--text-2);
+  font-style: italic;
+}
+
+.projBadge {
+  margin-left: 3px;
+  font-size: 0.55rem;
+  color: var(--text-3);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-2);
+  flex-shrink: 0;
+  min-width: 10px;
+  text-align: right;
+}
+
+.score.winner {
+  color: var(--score-color);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.tbd {
+  display: block;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--text-3);
+  padding: 4px 0;
+}
+
+.liveBadge {
+  font-size: 0.55rem;
+  color: var(--red);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: auto;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
