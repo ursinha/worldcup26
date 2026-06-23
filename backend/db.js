@@ -47,7 +47,15 @@ db.exec(`
     clock_seconds     REAL,
     period            TEXT,
     events            TEXT,
-    enriched_at       INTEGER
+    enriched_at       INTEGER,
+    -- predictions
+    pred_home         INTEGER,
+    pred_away         INTEGER,
+    pred_scores       TEXT,
+    win_home          REAL,
+    win_draw          REAL,
+    win_away          REAL,
+    pred_updated_at   INTEGER
   );
   CREATE TABLE IF NOT EXISTS groups_tbl (
     name TEXT PRIMARY KEY,
@@ -65,6 +73,25 @@ db.exec(`
     updated_at INTEGER NOT NULL
   );
 `);
+
+// Add prediction columns if missing (migration for existing DBs)
+{
+  const cols = db.pragma('table_info(matches)').map(c => c.name);
+  const toAdd = [
+    ['pred_home',       'INTEGER'],
+    ['pred_away',       'INTEGER'],
+    ['pred_scores',     'TEXT'],
+    ['win_home',        'REAL'],
+    ['win_draw',        'REAL'],
+    ['win_away',        'REAL'],
+    ['pred_updated_at', 'INTEGER'],
+  ];
+  for (const [col, type] of toAdd) {
+    if (!cols.includes(col)) {
+      db.exec(`ALTER TABLE matches ADD COLUMN ${col} ${type}`);
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Prepared statements
@@ -114,12 +141,26 @@ const _upsertEnrichment = db.prepare(`
     enriched_at   = excluded.enriched_at
 `);
 
+const _upsertPrediction = db.prepare(`
+  INSERT INTO matches (id, pred_home, pred_away, pred_scores, win_home, win_draw, win_away, pred_updated_at)
+  VALUES (@id, @pred_home, @pred_away, @pred_scores, @win_home, @win_draw, @win_away, @pred_updated_at)
+  ON CONFLICT(id) DO UPDATE SET
+    pred_home       = excluded.pred_home,
+    pred_away       = excluded.pred_away,
+    pred_scores     = excluded.pred_scores,
+    win_home        = excluded.win_home,
+    win_draw        = excluded.win_draw,
+    win_away        = excluded.win_away,
+    pred_updated_at = excluded.pred_updated_at
+`);
+
 const _upsertGroup   = db.prepare('INSERT INTO groups_tbl (name, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertTeam    = db.prepare('INSERT INTO teams (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertStadium = db.prepare('INSERT INTO stadiums (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 
-export const savePrimary    = db.transaction((rows) => { for (const r of rows) _upsertPrimary.run(r); });
-export const saveEnrichment = db.transaction((rows) => { for (const r of rows) _upsertEnrichment.run(r); });
+export const savePrimary     = db.transaction((rows) => { for (const r of rows) _upsertPrimary.run(r); });
+export const saveEnrichment  = db.transaction((rows) => { for (const r of rows) _upsertEnrichment.run(r); });
+export const savePredictions = db.transaction((rows) => { for (const r of rows) _upsertPrediction.run(r); });
 export const saveGroups     = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertGroup.run(r.name, JSON.stringify(r), now); });
 export const saveTeams      = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertTeam.run(r.id, JSON.stringify(r), now); });
 export const saveStadiums   = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertStadium.run(r.id, JSON.stringify(r), now); });
@@ -153,6 +194,12 @@ function rowToGame(row) {
     period:            row.period        ?? null,
     events:            row.events ? JSON.parse(row.events) : null,
     enriched_at:       row.enriched_at   ?? null,
+    pred_home:         row.pred_home     ?? null,
+    pred_away:         row.pred_away     ?? null,
+    pred_scores:       row.pred_scores   ? JSON.parse(row.pred_scores) : null,
+    win_home:          row.win_home      ?? null,
+    win_draw:          row.win_draw      ?? null,
+    win_away:          row.win_away      ?? null,
   };
 }
 

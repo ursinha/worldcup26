@@ -148,6 +148,25 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
         </div>
       )}
 
+      {/* Prediction — upcoming only */}
+      {status === 'notstarted' && game.pred_scores && (
+        <div className={styles.prediction}>
+          <span className={styles.predLabel}>Placar estimado</span>
+          <div className={styles.predScores}>
+            {game.pred_scores.map((s, i) => (
+              <span key={i} className={`${styles.predScore} ${i === 0 ? styles.predTop : ''}`}>
+                {s.home}–{s.away} <span className={styles.predProb}>{s.prob}%</span>
+              </span>
+            ))}
+          </div>
+          <div className={styles.predOutcomes}>
+            <span>Casa {game.win_home}%</span>
+            <span>Empate {game.win_draw}%</span>
+            <span>Fora {game.win_away}%</span>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <div className={styles.footer}>
         {stadium && <span>{stadium.fifa_name ?? stadium.name_en}</span>}

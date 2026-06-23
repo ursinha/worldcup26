@@ -3,7 +3,8 @@ import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums } from './db.js';
+import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions } from './db.js';
+import { computeAllPredictions } from './predictions.js';
 import * as primary from './sources/primary.js';
 import * as live from './sources/live.js';
 import { toESPNDate } from './sources/live.js';
@@ -65,6 +66,10 @@ async function pollPrimary() {
     const raw = await primary.fetchData();
     savePrimary(primary.extractUpdates(raw));
     refreshCache();
+
+    const predRows = computeAllPredictions(cache.matches?.games ?? []);
+    if (predRows.length) { savePredictions(predRows); refreshCache(); }
+
     cache.lastUpdated = new Date().toISOString();
     cache.lastError   = null;
   } catch (err) {

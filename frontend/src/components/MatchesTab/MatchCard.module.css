@@ -216,6 +216,51 @@
   flex-shrink: 0;
 }
 
+.prediction {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border-faint);
+}
+
+.predLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+
+.predScores {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.predScore {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.predScore.predTop {
+  color: var(--text-1);
+  font-weight: 700;
+}
+
+.predProb {
+  font-size: 0.65rem;
+  color: var(--text-3);
+}
+
+.predOutcomes {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.68rem;
+  color: var(--text-3);
+}
+
 .footer {
   display: flex;
   align-items: center;

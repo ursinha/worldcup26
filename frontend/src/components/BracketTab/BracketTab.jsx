@@ -86,6 +86,7 @@ export default function BracketTab() {
                         awayResolved={awayResolved}
                         slotHeight={slotH}
                         hasConnector={slotHasConnector}
+                        showGroup={rIdx < 3}
                       />
                     );
                   })}
@@ -106,6 +107,7 @@ export default function BracketTab() {
             awayResolved={resolveSlot(thirdGame.away_team_id, thirdGame.away_team_label, gameMap, groupMap, teamMap)}
             slotHeight={BASE}
             hasConnector={false}
+            showGroup={false}
           />
         </div>
       )}
