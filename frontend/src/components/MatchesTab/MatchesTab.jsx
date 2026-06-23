@@ -129,21 +129,29 @@ export default function MatchesTab() {
         <div className={styles.empty}>Nenhuma partida encontrada.</div>
       )}
 
-      {groupedByDate.map(({ isoDate, label, games }) => (
-        <div key={isoDate} className={styles.dateGroup}>
-          <div className={styles.dateHeading}>{label}</div>
-          <div className={styles.cards}>
-            {games.map((game) => (
-              <MatchCard
-                key={game.id}
-                game={game}
-                teamMap={teamMap}
-                stadiumMap={stadiumMap}
-              />
-            ))}
+      {groupedByDate.map(({ isoDate, label, games }) => {
+        const active   = filter === 'today' ? games.filter(g => matchStatus(g) !== 'finished') : games;
+        const finished = filter === 'today' ? games.filter(g => matchStatus(g) === 'finished') : [];
+
+        return (
+          <div key={isoDate} className={styles.dateGroup}>
+            <div className={styles.dateHeading}>{label}</div>
+            <div className={styles.cards}>
+              {active.map((game) => (
+                <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+              ))}
+              {finished.length > 0 && (
+                <>
+                  <div className={styles.sectionDivider}>Encerradas</div>
+                  {finished.map((game) => (
+                    <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+                  ))}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
