@@ -126,6 +126,17 @@
   padding: 4px 0;
 }
 
+.groupBadge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-3);
+  background: var(--surface-hi);
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
 .liveBadge {
   font-size: 0.55rem;
   color: var(--red);

@@ -78,61 +78,68 @@ function sortGroupTeams(teams) {
  * - projected  : true when the result is based on current standings (not confirmed)
  */
 export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0) {
-  if (depth > 5) return { team: null, projected: false };
+  if (depth > 5) return { team: null, projected: false, group: null };
 
   // API already assigned a real team
   if (teamId && teamId !== '0') {
-    return { team: teamMap[teamId] ?? null, projected: false };
+    const team = teamMap[teamId] ?? null;
+    const group = team?.groups?.[0] ?? null;
+    return { team, projected: false, group };
   }
 
-  if (!label) return { team: null, projected: false };
+  if (!label) return { team: null, projected: false, group: null };
 
   // "Winner Group X"
   const wg = label.match(/^Winner Group ([A-L])$/);
   if (wg) {
     const group = groupMap[wg[1]];
-    if (!group) return { team: null, projected: false };
+    if (!group) return { team: null, projected: false, group: wg[1] };
     const sorted = sortGroupTeams(group.teams);
-    return { team: teamMap[sorted[0]?.team_id] ?? null, projected: true };
+    return { team: teamMap[sorted[0]?.team_id] ?? null, projected: true, group: wg[1] };
   }
 
   // "Runner-up Group X"
   const rug = label.match(/^Runner-up Group ([A-L])$/);
   if (rug) {
     const group = groupMap[rug[1]];
-    if (!group) return { team: null, projected: false };
+    if (!group) return { team: null, projected: false, group: rug[1] };
     const sorted = sortGroupTeams(group.teams);
-    return { team: teamMap[sorted[1]?.team_id] ?? null, projected: true };
+    return { team: teamMap[sorted[1]?.team_id] ?? null, projected: true, group: rug[1] };
   }
 
   // "Winner Match N"
   const wm = label.match(/^Winner Match (\d+)$/);
   if (wm) {
     const game = gameMap[wm[1]];
-    if (!game) return { team: null, projected: false };
+    if (!game) return { team: null, projected: false, group: null };
     if (game.finished === 'TRUE') {
       const winnerId =
         +game.home_score > +game.away_score ? game.home_team_id : game.away_team_id;
-      return { team: teamMap[winnerId] ?? null, projected: false };
+      const team = teamMap[winnerId] ?? null;
+      return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    return { team: null, projected: true };
+    // Recurse to project winner from the source match
+    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
+    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
+    return { team: null, projected: true, group: homeR.group && awayR.group && homeR.group === awayR.group ? homeR.group : null };
   }
 
   // "Loser Match N" (3rd-place match)
   const lm = label.match(/^Loser Match (\d+)$/);
   if (lm) {
     const game = gameMap[lm[1]];
-    if (!game) return { team: null, projected: false };
+    if (!game) return { team: null, projected: false, group: null };
     if (game.finished === 'TRUE') {
       const loserId =
         +game.home_score <= +game.away_score ? game.home_team_id : game.away_team_id;
-      return { team: teamMap[loserId] ?? null, projected: false };
+      const team = teamMap[loserId] ?? null;
+      return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    return { team: null, projected: true };
+    return { team: null, projected: true, group: null };
   }
 
   // "3rd Group A/B/…" – too complex to pin to a slot, show TBD
-  return { team: null, projected: false };
+  return { team: null, projected: false, group: null };
 }
 
 /** Shorten long bracket labels to fit compact cards */

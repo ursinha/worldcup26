@@ -39,7 +39,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
 }
 
 function TeamRow({ resolved, label, score, isWinner, isLive }) {
-  const { team, projected } = resolved ?? { team: null, projected: false };
+  const { team, projected, group } = resolved ?? { team: null, projected: false, group: null };
 
   return (
     <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${!team ? styles.unknown : ''} ${team && !projected ? styles.confirmed : ''}`}>
@@ -54,6 +54,7 @@ function TeamRow({ resolved, label, score, isWinner, isLive }) {
         {team?.name_en ?? shortLabel(label)}
         {projected && team && <span className={styles.projBadge}> proj</span>}
       </span>
+      {group && <span className={styles.groupBadge}>{group}</span>}
       {isLive && <span className={styles.liveBadge}>AO VIVO</span>}
       {score !== null && (
         <span className={`${styles.score} ${isWinner ? styles.winner : ''}`}>{score}</span>
