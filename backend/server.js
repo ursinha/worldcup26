@@ -1,5 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+const DIST = join(__dir, '../frontend/dist');
 
 const app = express();
 const PORT = 3001;
@@ -97,6 +102,10 @@ app.get('/api/status', (_req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+// Serve built frontend in production
+app.use(express.static(DIST));
+app.get('*', (_req, res) => res.sendFile(join(DIST, 'index.html')));
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
