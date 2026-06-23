@@ -48,11 +48,16 @@ export function computeRatings(games) {
 
   const leagueAvg = totalGoals / (finished.length * 2); // per team per game
 
+  // Bayesian smoothing: add virtual games at the league average to prevent
+  // extreme ratings from small samples (e.g. a team with 0 goals conceded
+  // in one game getting a defense rating of 0, making opponents score 0).
+  const SMOOTH = 2; // virtual games added per team
+
   const ratings = {};
   for (const [id, s] of Object.entries(stats)) {
     ratings[id] = {
-      attack:  (s.scored   / s.games) / leagueAvg,
-      defense: (s.conceded / s.games) / leagueAvg,
+      attack:  ((s.scored   + leagueAvg * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
+      defense: ((s.conceded + leagueAvg * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
     };
   }
 

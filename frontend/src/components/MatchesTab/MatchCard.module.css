@@ -277,7 +277,8 @@
 }
 
 .predWinHome {
-  color: var(--accent);
+  color: var(--text-1);
+  font-weight: 700;
 }
 
 .predWinDraw {
@@ -286,7 +287,8 @@
 }
 
 .predWinAway {
-  color: #d97706;
+  color: var(--text-1);
+  font-weight: 700;
 }
 
 .predBarTrack {
@@ -295,22 +297,27 @@
   border-radius: 3px;
   overflow: hidden;
   display: flex;
-  background: var(--border);
+  gap: 2px;
+  background: transparent;
 }
 
 .predBarHome {
   height: 100%;
   background: var(--accent);
+  border-radius: 3px 0 0 3px;
 }
 
 .predBarDraw {
   height: 100%;
-  background: color-mix(in srgb, var(--text-3) 60%, transparent);
+  background: var(--border-hi);
 }
 
 .predBarAway {
   height: 100%;
-  background: #d97706;
+  background: var(--accent);
+  opacity: 0.5;
+  border-radius: 0 3px 3px 0;
+  margin-left: auto;
 }
 
 .footer {
