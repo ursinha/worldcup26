@@ -74,7 +74,7 @@ export default function StatusBar() {
                 <span className={styles.sourceDetail}>
                   {hasError
                     ? <span className={styles.sourceErr}>{s.lastError}</span>
-                    : s.calls != null ? `${s.calls.daily}h · ${s.calls.total}t` : ''}
+                    : s.calls != null ? `${s.calls.h24}/24h · ${s.calls.total} total` : ''}
                 </span>
               </div>
             );

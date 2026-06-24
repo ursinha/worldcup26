@@ -132,10 +132,13 @@ function utcDateStr() {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
 }
 
-const callCounts = { primary: null, live: null, odds: null };
+const callCounts     = { primary: null, live: null, odds: null };
+const callTimestamps = { primary: [],   live: [],   odds: [] };
+const WINDOW_24H     = 24 * 60 * 60 * 1000;
 
 function loadCallCounts() {
   const today = utcDateStr();
+  const cutoff = Date.now() - WINDOW_24H;
   for (const src of ['primary', 'live', 'odds']) {
     const savedDate  = getMeta(`calls_${src}_date`)  ?? today;
     const savedDaily = parseInt(getMeta(`calls_${src}_daily`) ?? '0', 10);
@@ -146,17 +149,25 @@ function loadCallCounts() {
       setMeta(`calls_${src}_daily`, 0);
       setMeta(`calls_${src}_date`, today);
     }
+    const raw = getMeta(`calls_${src}_ts`);
+    callTimestamps[src] = raw ? JSON.parse(raw).filter(t => t > cutoff) : [];
   }
 }
 
 function recordCall(src) {
+  const now   = Date.now();
   const today = utcDateStr();
-  const c = callCounts[src];
+  const c     = callCounts[src];
   if (c.date !== today) { c.daily = 0; c.date = today; setMeta(`calls_${src}_date`, today); }
   c.daily++;
   c.total++;
   setMeta(`calls_${src}_daily`, c.daily);
   setMeta(`calls_${src}_total`, c.total);
+  const ts = callTimestamps[src];
+  ts.push(now);
+  const cutoff = now - WINDOW_24H;
+  while (ts.length && ts[0] <= cutoff) ts.shift();
+  setMeta(`calls_${src}_ts`, JSON.stringify(ts));
 }
 
 loadCallCounts();
@@ -326,7 +337,10 @@ app.get('/api/status', (_req, res) => {
     live:        hasLiveMatch(),
     commit:      COMMIT,
     sources: Object.fromEntries(
-      Object.entries(sourceState).map(([k, v]) => [k, { ...v, calls: callCounts[k] }])
+      Object.entries(sourceState).map(([k, v]) => [k, {
+        ...v,
+        calls: { ...callCounts[k], h24: callTimestamps[k].length },
+      }])
     ),
     db: {
       matches:  games.length,
