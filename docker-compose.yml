@@ -1,0 +1,18 @@
+services:
+  worldcup:
+    build:
+      context: .
+      args:
+        COMMIT: ${COMMIT:-unknown}
+    image: worldcup:latest
+    ports:
+      - "8080:3001"
+    environment:
+      - ODDS_API_KEY=${ODDS_API_KEY}
+      - NODE_ENV=production
+    volumes:
+      - worldcup-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  worldcup-data:

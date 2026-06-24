@@ -1,0 +1,9 @@
+**/node_modules
+frontend/dist
+data
+logs
+.git
+.env
+*.log
+pm2.config.cjs
+deploy.sh
