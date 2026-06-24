@@ -13,6 +13,65 @@ import * as oddsSource from './sources/odds.js';
 const __dir = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dir, '../frontend/dist');
 
+// ---------------------------------------------------------------------------
+// Stadium timezone map (mirrors frontend utils/time.js)
+// ---------------------------------------------------------------------------
+
+const STADIUM_TZ = {
+  '1':  'America/Mexico_City',
+  '2':  'America/Mexico_City',
+  '3':  'America/Mexico_City',
+  '4':  'America/Chicago',
+  '5':  'America/Chicago',
+  '6':  'America/Chicago',
+  '7':  'America/New_York',
+  '8':  'America/New_York',
+  '9':  'America/New_York',
+  '10': 'America/New_York',
+  '11': 'America/New_York',
+  '12': 'America/Toronto',
+  '13': 'America/Vancouver',
+  '14': 'America/Los_Angeles',
+  '15': 'America/Los_Angeles',
+  '16': 'America/Los_Angeles',
+};
+
+function gameToUTC(localDateStr, stadiumId) {
+  if (!localDateStr) return null;
+  const tz = STADIUM_TZ[String(stadiumId)] ?? 'America/New_York';
+  const [datePart, timePart] = localDateStr.split(' ');
+  if (!datePart || !timePart) return null;
+  const [mm, dd, yyyy] = datePart.split('/');
+  const [hh, min] = timePart.split(':');
+  const naive = new Date(Date.UTC(+yyyy, +mm - 1, +dd, +hh, +min));
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(naive);
+  const p = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  const apparent = new Date(Date.UTC(+p.year, +p.month - 1, +p.day, p.hour === '24' ? 0 : +p.hour, +p.minute));
+  return new Date(naive.getTime() + (naive.getTime() - apparent.getTime()));
+}
+
+/**
+ * Returns ms until 3 minutes before the next scheduled kickoff.
+ * Returns 0 if a kickoff has already passed but hasn't been detected yet.
+ * Returns Infinity if no upcoming matches exist.
+ */
+function msUntilNextKickoff() {
+  const games = cache.matches?.games ?? [];
+  const now = Date.now();
+  let nearest = Infinity;
+  for (const g of games) {
+    if (g.finished !== 'FALSE' || g.time_elapsed !== 'notstarted') continue;
+    const utc = gameToUTC(g.local_date, g.stadium_id);
+    if (!utc) continue;
+    const ms = utc.getTime() - now - 3 * 60_000; // wake 3 min before kickoff
+    nearest = Math.min(nearest, Math.max(0, ms));
+  }
+  return nearest;
+}
+
 let COMMIT = 'unknown';
 try { COMMIT = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch {}
 
@@ -78,8 +137,10 @@ async function pollPrimary() {
     console.error(`[${primary.id}]`, err.message);
   }
   clearTimeout(primaryTimer);
-  const interval = hasLiveMatch() ? primary.intervals.live : primary.intervals.idle;
-  console.log(`[${primary.id}] next in ${interval / 1000}s`);
+  const interval = hasLiveMatch()
+    ? primary.intervals.live
+    : Math.max(60_000, Math.min(primary.intervals.idle, msUntilNextKickoff()));
+  console.log(`[${primary.id}] next in ${Math.round(interval / 1000)}s`);
   primaryTimer = setTimeout(pollPrimary, interval);
 }
 
