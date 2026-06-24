@@ -25,7 +25,7 @@ export default function GroupTable({ group, teamMap }) {
         <colgroup>
           <col style={{ width: 28 }} />
           <col />
-          {COLS.map((c) => <col key={c.key} style={{ width: 28 }} />)}
+          {COLS.map((c) => <col key={c.key} style={{ width: 34 }} />)}
         </colgroup>
         <thead>
           <tr>
