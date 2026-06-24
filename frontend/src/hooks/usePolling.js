@@ -15,7 +15,7 @@ export function usePolling(url, intervalMs = 15_000) {
 
     async function fetchData() {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         if (!cancelled) {
