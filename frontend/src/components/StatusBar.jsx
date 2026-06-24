@@ -29,6 +29,14 @@ export default function StatusBar() {
   const sources     = data?.sources ?? {};
   const db          = data?.db ?? null;
 
+  // Reload the page when a new deploy is detected (commit hash changed)
+  const initialCommit = useRef(null);
+  useEffect(() => {
+    if (!data?.commit) return;
+    if (initialCommit.current === null) { initialCommit.current = data.commit; return; }
+    if (data.commit !== initialCommit.current) window.location.reload();
+  }, [data?.commit]);
+
   useEffect(() => {
     if (!open) return;
     function onMouseDown(e) {
