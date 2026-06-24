@@ -87,3 +87,4 @@ worldcup/
                 ├── GroupsTab.jsx    # Grid layout
                 └── GroupTable.jsx  # Standings table
 ```
+# 2026 FIFA World Cup tracker
