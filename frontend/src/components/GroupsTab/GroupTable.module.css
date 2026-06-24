@@ -76,6 +76,11 @@
   padding-right: 0.2rem;
 }
 
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0.6rem;
+}
+
 .table td.pts {
   color: var(--text-1);
   font-weight: 700;
