@@ -3,7 +3,7 @@ import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions, saveOdds } from './db.js';
+import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions, saveOdds, getMeta, setMeta } from './db.js';
 import { computeAllPredictions } from './predictions.js';
 import * as primary from './sources/primary.js';
 import * as live from './sources/live.js';
@@ -119,7 +119,7 @@ function hasLiveMatch() {
 }
 
 // ---------------------------------------------------------------------------
-// Source health state
+// Source health state + call counters
 // ---------------------------------------------------------------------------
 
 const sourceState = {
@@ -128,11 +128,45 @@ const sourceState = {
   odds:    { lastFetch: null, lastError: null, nextPoll: null, lastCount: null },
 };
 
+function utcDateStr() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+}
+
+const callCounts = { primary: null, live: null, odds: null };
+
+function loadCallCounts() {
+  const today = utcDateStr();
+  for (const src of ['primary', 'live', 'odds']) {
+    const savedDate  = getMeta(`calls_${src}_date`)  ?? today;
+    const savedDaily = parseInt(getMeta(`calls_${src}_daily`) ?? '0', 10);
+    const savedTotal = parseInt(getMeta(`calls_${src}_total`) ?? '0', 10);
+    const isToday    = savedDate === today;
+    callCounts[src]  = { daily: isToday ? savedDaily : 0, total: savedTotal, date: today };
+    if (!isToday) {
+      setMeta(`calls_${src}_daily`, 0);
+      setMeta(`calls_${src}_date`, today);
+    }
+  }
+}
+
+function recordCall(src) {
+  const today = utcDateStr();
+  const c = callCounts[src];
+  if (c.date !== today) { c.daily = 0; c.date = today; setMeta(`calls_${src}_date`, today); }
+  c.daily++;
+  c.total++;
+  setMeta(`calls_${src}_daily`, c.daily);
+  setMeta(`calls_${src}_total`, c.total);
+}
+
+loadCallCounts();
+
 // Primary source
 let primaryTimer = null;
 let prevHadLive  = false;
 
 async function pollPrimary() {
+  recordCall('primary');
   try {
     const raw = await primary.fetchData();
     savePrimary(primary.extractUpdates(raw));
@@ -169,6 +203,7 @@ let liveTimer = null;
 
 async function pollLive() {
   if (!hasLiveMatch()) return;
+  recordCall('live');
   try {
     const raw     = await live.fetchData();
     const updates = live.extractUpdates(raw, cache.matches?.games ?? []);
@@ -224,6 +259,7 @@ function scheduleLive() {
 let oddsTimer = null;
 
 async function pollOdds() {
+  recordCall('odds');
   try {
     const raw     = await oddsSource.fetchOdds();
     const updates = oddsSource.extractOdds(raw, cache.matches?.games ?? []);
@@ -289,7 +325,9 @@ app.get('/api/status', (_req, res) => {
     lastError:   cache.lastError,
     live:        hasLiveMatch(),
     commit:      COMMIT,
-    sources:     sourceState,
+    sources: Object.fromEntries(
+      Object.entries(sourceState).map(([k, v]) => [k, { ...v, calls: callCounts[k] }])
+    ),
     db: {
       matches:  games.length,
       enriched: games.filter(g => g.enriched_at != null).length,

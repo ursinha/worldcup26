@@ -72,6 +72,10 @@ db.exec(`
     data TEXT NOT NULL,
     updated_at INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS meta (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `);
 
 // Add prediction columns if missing (migration for existing DBs)
@@ -226,3 +230,8 @@ export function loadMatches()  { return db.prepare('SELECT * FROM matches').all(
 export function loadGroups()   { return db.prepare('SELECT data FROM groups_tbl').all().map(r => JSON.parse(r.data)); }
 export function loadTeams()    { return db.prepare('SELECT data FROM teams').all().map(r => JSON.parse(r.data)); }
 export function loadStadiums() { return db.prepare('SELECT data FROM stadiums').all().map(r => JSON.parse(r.data)); }
+
+const _getMeta = db.prepare('SELECT value FROM meta WHERE key = ?');
+const _setMeta = db.prepare('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+export function getMeta(key)        { return _getMeta.get(key)?.value ?? null; }
+export function setMeta(key, value) { _setMeta.run(key, String(value)); }
