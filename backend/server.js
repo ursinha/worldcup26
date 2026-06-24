@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -109,6 +110,7 @@ if (cache.matches) console.log(`[db] loaded ${cache.matches.games.length} matche
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
