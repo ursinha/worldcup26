@@ -120,6 +120,7 @@ function hasLiveMatch() {
 
 // Primary source
 let primaryTimer = null;
+let prevHadLive  = false;
 
 async function pollPrimary() {
   try {
@@ -136,7 +137,11 @@ async function pollPrimary() {
     cache.lastError = err.message;
     console.error(`[${primary.id}]`, err.message);
   }
-  scheduleLive(); // start live enrichment if a match just went live
+  // Kick off live enrichment only on transition into live mode,
+  // not on every poll (which would keep resetting the 8-min timer).
+  const nowHasLive = hasLiveMatch();
+  if (nowHasLive && !prevHadLive) scheduleLive();
+  prevHadLive = nowHasLive;
   clearTimeout(primaryTimer);
   const interval = hasLiveMatch()
     ? primary.intervals.live
