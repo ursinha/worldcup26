@@ -39,13 +39,15 @@ export default function GroupTable({ group, teamMap }) {
           {sortedTeams.map((entry, idx) => {
             const team = teamMap[entry.team_id];
             const isQualified = idx < 2;
+            const maxPts = +entry.pts + (3 - +entry.mp) * 3;
+            const isEliminated = idx >= 2 && maxPts < +sortedTeams[1].pts;
 
             return (
-              <tr key={entry.team_id} className={isQualified ? styles.qualified : ''}>
+              <tr key={entry.team_id} className={isQualified ? styles.qualified : isEliminated ? styles.eliminated : ''}>
                 <td style={{ padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
                   <span className={styles.pos}>{idx + 1}</span>
                 </td>
-                <td className={`${styles.teamCell} ${isQualified ? styles.qualBorder : ''}`}>
+                <td className={`${styles.teamCell} ${isQualified ? styles.qualBorder : isEliminated ? styles.elimBorder : ''}`}>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}

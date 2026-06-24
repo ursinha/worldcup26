@@ -112,3 +112,11 @@
 .qualBorder {
   border-left: 3px solid var(--accent);
 }
+
+.table tr.eliminated td {
+  opacity: 0.4;
+}
+
+.elimBorder {
+  border-left: 3px solid var(--border);
+}
