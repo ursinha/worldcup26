@@ -136,6 +136,7 @@ async function pollPrimary() {
     cache.lastError = err.message;
     console.error(`[${primary.id}]`, err.message);
   }
+  scheduleLive(); // start live enrichment if a match just went live
   clearTimeout(primaryTimer);
   const interval = hasLiveMatch()
     ? primary.intervals.live
