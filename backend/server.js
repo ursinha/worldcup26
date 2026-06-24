@@ -118,6 +118,16 @@ function hasLiveMatch() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Source health state
+// ---------------------------------------------------------------------------
+
+const sourceState = {
+  primary: { lastFetch: null, lastError: null, nextPoll: null },
+  live:    { lastFetch: null, lastError: null, nextPoll: null, lastCount: null },
+  odds:    { lastFetch: null, lastError: null, nextPoll: null, lastCount: null },
+};
+
 // Primary source
 let primaryTimer = null;
 let prevHadLive  = false;
@@ -131,10 +141,13 @@ async function pollPrimary() {
     const predRows = computeAllPredictions(cache.matches?.games ?? []);
     if (predRows.length) { savePredictions(predRows); refreshCache(); }
 
-    cache.lastUpdated = new Date().toISOString();
-    cache.lastError   = null;
+    cache.lastUpdated             = new Date().toISOString();
+    cache.lastError               = null;
+    sourceState.primary.lastFetch = cache.lastUpdated;
+    sourceState.primary.lastError = null;
   } catch (err) {
-    cache.lastError = err.message;
+    cache.lastError               = err.message;
+    sourceState.primary.lastError = err.message;
     console.error(`[${primary.id}]`, err.message);
   }
   // Kick off live enrichment only on transition into live mode,
@@ -146,6 +159,7 @@ async function pollPrimary() {
   const interval = hasLiveMatch()
     ? primary.intervals.live
     : Math.max(60_000, Math.min(primary.intervals.idle, msUntilNextKickoff()));
+  sourceState.primary.nextPoll = Date.now() + interval;
   console.log(`[${primary.id}] next in ${Math.round(interval / 1000)}s`);
   primaryTimer = setTimeout(pollPrimary, interval);
 }
@@ -162,8 +176,12 @@ async function pollLive() {
       saveEnrichment(updates);
       refreshCache();
     }
+    sourceState.live.lastFetch = new Date().toISOString();
+    sourceState.live.lastError = null;
+    sourceState.live.lastCount = updates.length;
     console.log(`[${live.id}] synced ${updates.length} match(es)`);
   } catch (err) {
+    sourceState.live.lastError = err.message;
     console.error(`[${live.id}]`, err.message);
   }
   scheduleLive();
@@ -197,7 +215,9 @@ async function backfillEvents() {
 function scheduleLive() {
   clearTimeout(liveTimer);
   if (!hasLiveMatch()) return;
-  liveTimer = setTimeout(pollLive, live.intervals.live);
+  const interval = live.intervals.live;
+  sourceState.live.nextPoll = Date.now() + interval;
+  liveTimer = setTimeout(pollLive, interval);
 }
 
 // Odds source — O/U lines from The Odds API
@@ -217,11 +237,17 @@ async function pollOdds() {
     } else {
       console.log(`[${oddsSource.id}] no matches found in odds feed`);
     }
+    sourceState.odds.lastFetch = new Date().toISOString();
+    sourceState.odds.lastError = null;
+    sourceState.odds.lastCount = updates.length;
   } catch (err) {
+    sourceState.odds.lastError = err.message;
     console.error(`[${oddsSource.id}]`, err.message);
   }
   clearTimeout(oddsTimer);
-  oddsTimer = setTimeout(pollOdds, oddsSource.intervals.idle);
+  const interval = oddsSource.intervals.idle;
+  sourceState.odds.nextPoll = Date.now() + interval;
+  oddsTimer = setTimeout(pollOdds, interval);
 }
 
 // Static data — fetch once at startup, sourced from primary
@@ -255,13 +281,22 @@ app.get('/api/groups',   serve('groups'));
 app.get('/api/teams',    serve('teams'));
 app.get('/api/stadiums', serve('stadiums'));
 
-app.get('/api/status', (_req, res) => res.json({
-  ok:          cache.lastError === null,
-  lastUpdated: cache.lastUpdated,
-  lastError:   cache.lastError,
-  live:        hasLiveMatch(),
-  commit:      COMMIT,
-}));
+app.get('/api/status', (_req, res) => {
+  const games = cache.matches?.games ?? [];
+  res.json({
+    ok:          cache.lastError === null,
+    lastUpdated: cache.lastUpdated,
+    lastError:   cache.lastError,
+    live:        hasLiveMatch(),
+    commit:      COMMIT,
+    sources:     sourceState,
+    db: {
+      matches:  games.length,
+      enriched: games.filter(g => g.enriched_at != null).length,
+      withOdds: games.filter(g => g.ou_line  != null).length,
+    },
+  });
+});
 
 app.use(express.static(DIST, {
   setHeaders(res, filePath) {
