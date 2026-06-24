@@ -1,7 +1,7 @@
 const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 
 export const id = 'live';
-export const intervals = { live: 15 * 60_000, idle: null };
+export const intervals = { live: 8 * 60_000, idle: null };
 
 // ESPN uses different names for some teams; map to our primary source names
 const NAME_ALIASES = {
