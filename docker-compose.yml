@@ -1,12 +1,23 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - worldcup
+    restart: unless-stopped
+
   worldcup:
     build:
       context: .
       args:
         COMMIT: ${COMMIT:-unknown}
     image: worldcup:latest
-    ports:
-      - "8080:3001"
     environment:
       - ODDS_API_KEY=${ODDS_API_KEY}
       - NODE_ENV=production
@@ -16,3 +27,5 @@ services:
 
 volumes:
   worldcup-data:
+  caddy-data:
+  caddy-config:

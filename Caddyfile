@@ -1,0 +1,3 @@
+multilateral.me {
+	reverse_proxy worldcup:3001
+}
