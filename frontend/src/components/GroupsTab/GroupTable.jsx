@@ -40,7 +40,7 @@ export default function GroupTable({ group, teamMap }) {
             const team = teamMap[entry.team_id];
             const isQualified = idx < 2;
             const maxPts = +entry.pts + (3 - +entry.mp) * 3;
-            const isEliminated = idx >= 2 && maxPts < +sortedTeams[1].pts;
+            const isEliminated = idx === 3 && maxPts < +sortedTeams[2].pts;
 
             return (
               <tr key={entry.team_id} className={isQualified ? styles.qualified : isEliminated ? styles.eliminated : ''}>
