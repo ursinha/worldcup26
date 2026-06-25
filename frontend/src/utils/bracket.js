@@ -73,6 +73,16 @@ function sortGroupTeams(teams) {
 }
 
 /**
+ * Returns true when every team in the group has played all their group games,
+ * meaning the standings are final (each team plays num_teams - 1 games).
+ */
+function isGroupComplete(teams) {
+  if (!teams?.length) return false;
+  const maxPossible = teams.length - 1;
+  return teams.every(t => +t.mp >= maxPossible);
+}
+
+/**
  * Resolve a slot (teamId + label from the API) to { team, projected }.
  * - team       : team object from teamMap, or null if unknown
  * - projected  : true when the result is based on current standings (not confirmed)
@@ -95,7 +105,8 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
     const group = groupMap[wg[1]];
     if (!group) return { team: null, projected: false, group: wg[1] };
     const sorted = sortGroupTeams(group.teams);
-    return { team: teamMap[sorted[0]?.team_id] ?? null, projected: true, group: wg[1] };
+    const groupComplete = isGroupComplete(group.teams);
+    return { team: teamMap[sorted[0]?.team_id] ?? null, projected: !groupComplete, group: wg[1] };
   }
 
   // "Runner-up Group X"
@@ -104,7 +115,8 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
     const group = groupMap[rug[1]];
     if (!group) return { team: null, projected: false, group: rug[1] };
     const sorted = sortGroupTeams(group.teams);
-    return { team: teamMap[sorted[1]?.team_id] ?? null, projected: true, group: rug[1] };
+    const groupComplete = isGroupComplete(group.teams);
+    return { team: teamMap[sorted[1]?.team_id] ?? null, projected: !groupComplete, group: rug[1] };
   }
 
   // "Winner Match N"
