@@ -36,11 +36,16 @@ export default function GroupTable({ group, teamMap }) {
           </tr>
         </thead>
         <tbody>
-          {sortedTeams.map((entry, idx) => {
+          {(() => {
+            const groupDone = sortedTeams.every(t => +t.mp >= 3);
+            const thirdPts  = +sortedTeams[2]?.pts ?? 0;
+            return sortedTeams.map((entry, idx) => {
             const team = teamMap[entry.team_id];
             const isQualified = idx < 2;
-            const maxPts = +entry.pts + (3 - +entry.mp) * 3;
-            const isEliminated = idx === 3 && maxPts < +sortedTeams[2].pts;
+            const maxPts = +entry.pts + Math.max(0, 3 - (+entry.mp || 0)) * 3;
+            // Eliminated when group is fully played (groupDone covers ties on pts/GD)
+            // or when they mathematically can't reach 3rd's current points
+            const isEliminated = idx === 3 && (groupDone || maxPts < thirdPts);
 
             return (
               <tr key={entry.team_id} className={isQualified ? styles.qualified : isEliminated ? styles.eliminated : ''}>
@@ -60,7 +65,8 @@ export default function GroupTable({ group, teamMap }) {
                 ))}
               </tr>
             );
-          })}
+            });
+          })()}
         </tbody>
       </table>
     </div>
