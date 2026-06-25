@@ -9,12 +9,13 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
     game?.finished === 'FALSE' && game?.time_elapsed !== 'notstarted';
   const isNotStarted = game?.finished === 'FALSE' && game?.time_elapsed === 'notstarted';
 
-  let matchDate = null, matchTime = null;
+  let matchDate = null, matchTime = null, matchWeekday = null;
   if (game?.local_date && game?.stadium_id) {
     const utc = gameToUTC(game.local_date, game.stadium_id);
     const fmt = formatBRT(utc);
-    matchDate = fmt.date.slice(0, 5); // "29/06"
-    matchTime = fmt.time;             // "16:00"
+    matchDate    = fmt.date.slice(0, 5); // "29/06"
+    matchTime    = fmt.time;             // "16:00"
+    matchWeekday = fmt.weekday.slice(0, 3); // "qua"
   }
 
   return (
@@ -42,7 +43,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               showGroup={showGroup}
             />
             {isNotStarted && matchDate && (
-              <div className={styles.matchDate}>{matchDate} · {matchTime} BRT</div>
+              <div className={styles.matchDate}>{matchWeekday} · {matchDate} · {matchTime} BRT</div>
             )}
           </>
         ) : (
