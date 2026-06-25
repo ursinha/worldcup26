@@ -9,6 +9,12 @@ export async function fetchData() {
   return res.json();
 }
 
+export async function fetchGroups() {
+  const res = await fetch(`${SOURCE_BASE}/get/groups`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export async function fetchStatic() {
   const [groups, teams, stadiums] = await Promise.all([
     fetch(`${SOURCE_BASE}/get/groups`).then(r => r.json()),

@@ -181,8 +181,12 @@ let prevHadLive  = false;
 async function pollPrimary() {
   recordCall('primary');
   try {
-    const raw = await primary.fetchData();
+    const [raw, groupsData] = await Promise.all([
+      primary.fetchData(),
+      primary.fetchGroups(),
+    ]);
     savePrimary(primary.extractUpdates(raw));
+    saveGroups(groupsData.groups ?? []);
     refreshCache();
 
     const predRows = computeAllPredictions(cache.matches?.games ?? []);
