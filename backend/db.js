@@ -139,14 +139,16 @@ const _upsertPrimary = db.prepare(`
 `);
 
 const _upsertEnrichment = db.prepare(`
-  INSERT INTO matches (id, clock, clock_seconds, period, events, enriched_at)
-  VALUES (@id, @clock, @clock_seconds, @period, @events, @enriched_at)
+  INSERT INTO matches (id, clock, clock_seconds, period, events, enriched_at, home_score, away_score)
+  VALUES (@id, @clock, @clock_seconds, @period, @events, @enriched_at, @home_score, @away_score)
   ON CONFLICT(id) DO UPDATE SET
     clock         = excluded.clock,
     clock_seconds = excluded.clock_seconds,
     period        = excluded.period,
     events        = excluded.events,
-    enriched_at   = excluded.enriched_at
+    enriched_at   = excluded.enriched_at,
+    home_score    = COALESCE(excluded.home_score, home_score),
+    away_score    = COALESCE(excluded.away_score, away_score)
 `);
 
 const _upsertPrediction = db.prepare(`

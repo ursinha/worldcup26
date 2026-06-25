@@ -1,7 +1,7 @@
 const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 
 export const id = 'live';
-export const intervals = { live: 8 * 60_000, idle: null };
+export const intervals = { live: 60_000, idle: null };
 
 // ESPN uses different names for some teams; map to our primary source names
 const NAME_ALIASES = {
@@ -94,6 +94,9 @@ export function extractUpdates(rawData, currentMatches) {
       period:        mapPeriod(status.type),
       events:        JSON.stringify(events),
       enriched_at:   now,
+      // real-time scores from ESPN; null for post so primary source stays authoritative
+      home_score:    isPost ? null : (homeComp.score ?? null),
+      away_score:    isPost ? null : (awayComp.score ?? null),
     });
   }
 
