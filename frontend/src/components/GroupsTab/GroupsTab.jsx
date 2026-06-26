@@ -13,7 +13,7 @@ const SUB_TABS = [
 
 export default function GroupsTab() {
   const { data: groupsData, loading: groupsLoading } = usePolling('/api/groups', 15_000);
-  const { data: teamsData } = usePolling('/api/teams', 60_000);
+  const { data: teamsData, loading: teamsLoading } = usePolling('/api/teams', 60_000);
   const { data: matchesData } = usePolling('/api/matches', 15_000);
 
   const [subTab, setSubTab] = useState('groups');
@@ -36,7 +36,7 @@ export default function GroupsTab() {
     return rankThirdPlaceTeams(projectedGroups, matchesData?.games);
   }, [projectedGroups, matchesData]);
 
-  if (groupsLoading) {
+  if (groupsLoading || teamsLoading) {
     return <div className={styles.loading}>Carregando grupos…</div>;
   }
 
