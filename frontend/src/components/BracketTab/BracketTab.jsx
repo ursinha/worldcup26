@@ -52,10 +52,13 @@ export default function BracketTab() {
             <div key={round.id} className={styles.roundCol}>
               <div className={styles.roundLabel}>{round.label}</div>
 
-              {round.pairGroups.map((matchIds, pIdx) => (
+              {round.pairGroups.map((matchIds, pIdx) => {
+                const mid = Math.floor(round.pairGroups.length / 2);
+                const isLowerHalf = round.pairGroups.length > 1 && pIdx === mid;
+                return (
                 <div
                   key={pIdx}
-                  className={`${styles.pair} ${pairHasConnector && matchIds.length > 1 ? styles.hasConnector : ''}`}
+                  className={`${styles.pair} ${pairHasConnector && matchIds.length > 1 ? styles.hasConnector : ''} ${isLowerHalf ? styles.halfDivider : ''}`}
                   style={{
                     '--pair-connector-top': pairConnectorTop,
                     '--pair-connector-h': pairConnectorH,
@@ -91,7 +94,8 @@ export default function BracketTab() {
                     );
                   })}
                 </div>
-              ))}
+                );
+              })}
             </div>
           );
         })}
