@@ -69,7 +69,7 @@ export default function BracketTab() {
                 const mid = Math.floor(round.pairGroups.length / 2);
                 const isLowerHalf = round.pairGroups.length > 1 && pIdx >= mid;
                 const isHalfStart = round.pairGroups.length > 1 && pIdx === mid;
-                const halfClass = round.pairGroups.length > 1
+                const halfClass = rIdx === 0 && round.pairGroups.length > 1
                   ? (isLowerHalf ? styles.lowerHalf : styles.upperHalf)
                   : '';
                 return (

@@ -51,11 +51,12 @@
   margin-top: 3rem;
 }
 
-/* Colored left-edge stripes to distinguish bracket halves */
+/* Colored left-edge stripes to distinguish bracket halves (R32 only) */
 .upperHalf,
 .lowerHalf {
   border-left: 3px solid transparent;
-  padding-left: 6px;
+  margin-left: 4px;
+  padding-left: 8px;
 }
 
 .upperHalf {
