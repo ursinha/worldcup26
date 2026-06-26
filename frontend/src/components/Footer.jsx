@@ -21,7 +21,7 @@ export default function Footer() {
         </div>
         <span className={styles.separator}>·</span>
         <span className={styles.author}>
-          Feito por <a href="https://github.com/ursinha" target="_blank" rel="noopener noreferrer" className={styles.authorLink}>@ursinha</a> por amor ao futebol — a Copa do Mundo é maravilhosa &#127942;
+          Feito por <a href="https://github.com/ursinha" target="_blank" rel="noopener noreferrer" className={styles.authorLink}>@ursinha</a> — a Copa do Mundo é maravilhosa&#8482;
         </span>
       </div>
       <div className={styles.row}>
