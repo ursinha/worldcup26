@@ -1,12 +1,20 @@
 .footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--gold-border, rgba(212, 160, 32, 0.25));
   font-size: 0.7rem;
   color: var(--text-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .branding {
@@ -31,6 +39,20 @@
 .commit {
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-2);
+}
+
+.author {
+  color: var(--text-2);
+}
+
+.authorLink {
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.authorLink:hover {
+  text-decoration: underline;
 }
 
 .disclaimer {
