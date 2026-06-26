@@ -10,7 +10,6 @@ const COLS = [
   { key: 'ga', label: 'GC' },
   { key: 'gd', label: 'SG' },
   { key: 'pts', label: 'PTS' },
-  { key: 'fpp', label: 'FP' },
 ];
 
 export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
@@ -27,7 +26,7 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
         </colgroup>
         <thead>
           <tr>
-            <th className={styles.stat}>Grp</th>
+            <th className={styles.stat}></th>
             <th className={styles.teamCol}>Seleção</th>
             {COLS.map((c) => (
               <th key={c.key} className={styles.stat}>{c.label}</th>
