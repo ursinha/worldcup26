@@ -16,12 +16,12 @@ export default function GroupsTab() {
   const { data: teamsData, loading: teamsLoading } = usePolling('/api/teams', 60_000);
   const { data: matchesData } = usePolling('/api/matches', 15_000);
 
-  const [subTab, changeSubTab] = useState(
+  const [subTab, setSubTab] = useState(
     () => localStorage.getItem('wc-groups-tab') ?? 'groups',
   );
 
   function changeSubTab(key) {
-    changeSubTab(key);
+    setSubTab(key);
     localStorage.setItem('wc-groups-tab', key);
   }
 
