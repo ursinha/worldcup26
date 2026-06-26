@@ -5,16 +5,6 @@
   scrollbar-width: thin;
 }
 
-.bracket {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  --bracket-gap: 32px;
-  --base: 68px;
-  gap: var(--bracket-gap);
-  min-width: max-content;
-}
-
 .roundCol {
   display: flex;
   flex-direction: column;
@@ -47,16 +37,21 @@
   border-right: 1px solid var(--border-hi);
 }
 
-.halfDivider {
-  margin-top: 1.5rem;
+/* Half-bracket boxes */
+.halfBox {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--border);
 }
 
-/* Colored left-edge stripes to distinguish bracket halves (R32 only) */
-.upperHalf,
-.lowerHalf {
-  border-left: 3px solid transparent;
-  margin-left: 4px;
-  padding-left: 8px;
+.halfBracket {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  --bracket-gap: 32px;
+  gap: var(--bracket-gap);
+  min-width: max-content;
 }
 
 .upperHalf {
@@ -65,6 +60,14 @@
 
 .lowerHalf {
   border-left-color: var(--half-lower);
+}
+
+/* Final section between the two halves */
+.finalSection {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.25rem 1.25rem 1.25rem 0;
+  min-width: max-content;
 }
 
 .thirdSection {
