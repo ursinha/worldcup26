@@ -97,45 +97,69 @@ export function isGroupComplete(teams) {
  *   - eliminated     : cannot finish in the top 3 → no path to the knockouts
  *                      (only 3rd-placed teams can grab a best-third spot, so a
  *                      team stuck in last is mathematically out)
+ *   - guaranteedTop3 : can never finish below 3rd (so always a third-or-better)
+ *   - canTop2        : still has a scenario that ends in the top 2
+ *   - minPts/maxPts  : floor/ceiling of the team's final points
  *
- * Boundaries kept deliberately truthful/conservative: it does not claim
- * advancement via a clinched best-third spot, nor eliminate a 3rd-placed team
- * whose best-third fate depends on other groups — those stay "in contention".
+ * Also returns group-level `thirdFloor`/`thirdCeil`: the min/max points the
+ * 3rd-placed team of this group can finish with, used by the cross-group
+ * best-third analysis (see applyBestThird).
  */
 export function computeClinch(sortedTeams, groupMatches) {
   const ids = sortedTeams.map((t) => t.team_id);
   const matches = groupMatches ?? [];
   const pending = matches.filter((m) => matchStatus(m) !== 'finished');
 
+  // Base points from finished matches + count each team's remaining games
+  const basePts = Object.fromEntries(ids.map((id) => [id, 0]));
+  const pendCount = Object.fromEntries(ids.map((id) => [id, 0]));
+  for (const m of matches) {
+    if (basePts[m.home_team_id] === undefined || basePts[m.away_team_id] === undefined) continue;
+    if (matchStatus(m) === 'finished') {
+      const hs = +m.home_score || 0;
+      const as = +m.away_score || 0;
+      if (hs > as) basePts[m.home_team_id] += 3;
+      else if (hs < as) basePts[m.away_team_id] += 3;
+      else { basePts[m.home_team_id] += 1; basePts[m.away_team_id] += 1; }
+    } else {
+      pendCount[m.home_team_id] += 1;
+      pendCount[m.away_team_id] += 1;
+    }
+  }
+  const minPts = { ...basePts };
+  const maxPts = Object.fromEntries(ids.map((id) => [id, basePts[id] + 3 * pendCount[id]]));
+
   // Group already decided — positions are final, use the real standings order
   if (pending.length === 0) {
     const last = sortedTeams.length - 1;
-    return Object.fromEntries(sortedTeams.map((t, i) => [t.team_id, {
-      clinchedWinner: i === 0,
-      qualified: i <= 1,
-      eliminated: i === last,
-    }]));
-  }
-
-  // Base points from finished matches only
-  const basePts = Object.fromEntries(ids.map((id) => [id, 0]));
-  for (const m of matches) {
-    if (matchStatus(m) !== 'finished') continue;
-    const hs = +m.home_score || 0;
-    const as = +m.away_score || 0;
-    if (basePts[m.home_team_id] === undefined || basePts[m.away_team_id] === undefined) continue;
-    if (hs > as) basePts[m.home_team_id] += 3;
-    else if (hs < as) basePts[m.away_team_id] += 3;
-    else { basePts[m.home_team_id] += 1; basePts[m.away_team_id] += 1; }
+    const thirdPts = +(sortedTeams[2]?.pts ?? 0);
+    return {
+      teams: Object.fromEntries(sortedTeams.map((t, i) => [t.team_id, {
+        clinchedWinner: i === 0,
+        qualified: i <= 1,
+        eliminated: i === last,
+        guaranteedTop3: i <= 2,
+        canTop2: i <= 1,
+        minPts: +t.pts, maxPts: +t.pts,
+      }])),
+      thirdFloor: thirdPts, thirdCeil: thirdPts,
+    };
   }
 
   const combos = 3 ** pending.length;
   if (combos > 6561) { // safety valve; never expected for a 4-team group
-    return Object.fromEntries(ids.map((id) => [id, { clinchedWinner: false, qualified: false, eliminated: false }]));
+    return {
+      teams: Object.fromEntries(ids.map((id) => [id, {
+        clinchedWinner: false, qualified: false, eliminated: false,
+        guaranteedTop3: false, canTop2: true, minPts: minPts[id], maxPts: maxPts[id],
+      }])),
+      thirdFloor: 0, thirdCeil: Infinity,
+    };
   }
 
   const maxGeq = Object.fromEntries(ids.map((id) => [id, 0]));        // most rivals finishing ≥ this team
   const minGreater = Object.fromEntries(ids.map((id) => [id, Infinity])); // fewest rivals finishing strictly ahead
+  let thirdFloor = Infinity, thirdCeil = -Infinity;
 
   for (let c = 0; c < combos; c++) {
     const pts = { ...basePts };
@@ -156,13 +180,68 @@ export function computeClinch(sortedTeams, groupMatches) {
       if (geq > maxGeq[id]) maxGeq[id] = geq;
       if (greater < minGreater[id]) minGreater[id] = greater;
     }
+    // points of the 3rd-placed team in this scenario (3rd highest)
+    const third = ids.map((id) => pts[id]).sort((a, b) => b - a)[2] ?? 0;
+    if (third < thirdFloor) thirdFloor = third;
+    if (third > thirdCeil) thirdCeil = third;
   }
 
-  return Object.fromEntries(ids.map((id) => [id, {
-    clinchedWinner: maxGeq[id] === 0,
-    qualified: maxGeq[id] <= 1,
-    eliminated: minGreater[id] >= 3,
-  }]));
+  return {
+    teams: Object.fromEntries(ids.map((id) => [id, {
+      clinchedWinner: maxGeq[id] === 0,
+      qualified: maxGeq[id] <= 1,
+      eliminated: minGreater[id] >= 3,
+      guaranteedTop3: maxGeq[id] <= 2,
+      canTop2: minGreater[id] <= 1,
+      minPts: minPts[id], maxPts: maxPts[id],
+    }])),
+    thirdFloor, thirdCeil,
+  };
+}
+
+/**
+ * Cross-group best-third clinch / elimination. 12 third-placed teams compete
+ * for 8 knockout spots; this folds that into each team's qualified/eliminated
+ * status, soundly (never overclaiming).
+ *
+ * For a team T in group b (not already decided by its group):
+ *   - aheadPossible   = # other groups whose 3rd-placed team COULD finish with
+ *                       points ≥ T's floor (thirdCeil ≥ T.minPts)
+ *   - aheadGuaranteed = # other groups whose 3rd-placed team is GUARANTEED to
+ *                       finish with more points than T's ceiling (thirdFloor > T.maxPts)
+ *
+ * T clinches a knockout spot (as a third) when it can never finish below 3rd
+ * AND at most 7 other thirds could possibly be ahead of it. T is eliminated
+ * when it can't reach the top 2 AND at least 8 other thirds are guaranteed
+ * ahead of it. Boundary ties (equal points decided by GD) fall on the safe
+ * side of both tests, so neither verdict is ever claimed prematurely.
+ *
+ * Only meaningful for the 12-group / 8-best-thirds format; skipped otherwise.
+ */
+export function applyBestThird(built) {
+  if (built.length !== 12) return;
+  const QUALIFY = 8; // best thirds that advance
+
+  for (const b of built) {
+    for (const id of Object.keys(b.clinch.teams)) {
+      const T = b.clinch.teams[id];
+      if (T.qualified || T.eliminated) continue; // already settled by its group
+
+      let aheadPossible = 0, aheadGuaranteed = 0;
+      for (const g of built) {
+        if (g === b) continue;
+        if (g.clinch.thirdCeil >= T.minPts) aheadPossible += 1;
+        if (g.clinch.thirdFloor > T.maxPts) aheadGuaranteed += 1;
+      }
+
+      if (T.guaranteedTop3 && aheadPossible <= QUALIFY - 1) {
+        T.qualified = true;
+        T.advancedAsThird = true;
+      } else if (!T.canTop2 && aheadGuaranteed >= QUALIFY) {
+        T.eliminated = true;
+      }
+    }
+  }
 }
 
 /**
@@ -258,15 +337,28 @@ export function projectStandings(groups, matches) {
   const fpp = computeFairPlayPoints(matches);
   const allMatches = matches ?? [];
 
-  // Build result groups with fully-sorted standings (overall + head-to-head)
-  // and attach the mathematical clinch/elimination status to each team.
-  return groups.map((group) => {
+  // First pass: fully-sorted standings (overall + head-to-head) and the
+  // group-local clinch/elimination status for each team.
+  const built = groups.map((group) => {
     const sorted = sortStandings(Object.values(standingsMap[group.name]), matchRecords, fpp);
     const groupMatches = allMatches.filter((m) => m.type === 'group' && m.group === group.name);
-    const clinch = computeClinch(sorted, groupMatches);
-    return {
-      ...group,
-      teams: sorted.map((t) => ({ ...t, ...clinch[t.team_id] })),
-    };
+    return { group, sorted, clinch: computeClinch(sorted, groupMatches) };
   });
+
+  // Second pass: cross-group best-third clinch/elimination folds into qualified/eliminated.
+  applyBestThird(built);
+
+  return built.map(({ group, sorted, clinch }) => ({
+    ...group,
+    teams: sorted.map((t) => {
+      const c = clinch.teams[t.team_id];
+      return {
+        ...t,
+        clinchedWinner: c.clinchedWinner,
+        qualified: c.qualified,
+        eliminated: c.eliminated,
+        advancedAsThird: !!c.advancedAsThird,
+      };
+    }),
+  }));
 }

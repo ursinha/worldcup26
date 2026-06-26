@@ -46,6 +46,8 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}
                   <span className={`${styles.teamName} ${tpStyles.teamNameTp}`}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
+                  {entry.qualified && <span className={`${styles.statusBadge} ${styles.badgeQual}`} title="Classificada (melhor 3º lugar)">✓</span>}
+                  {entry.eliminated && <span className={`${styles.statusBadge} ${styles.badgeElim}`} title="Eliminada">✗</span>}
                   {entry.isLive && <span className={tpStyles.liveDot} />}
                 </td>
                 {COLS.map((c) => (

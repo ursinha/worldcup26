@@ -42,7 +42,7 @@ export default function GroupTable({ group, teamMap }) {
             // Affirmative, math-backed status (independent of the upstream feed)
             let badge = null;
             if (entry.clinchedWinner) badge = { cls: styles.badgeQual, text: '1º ✓', title: 'Classificada em 1º lugar' };
-            else if (entry.qualified) badge = { cls: styles.badgeQual, text: '✓', title: 'Classificada' };
+            else if (entry.qualified) badge = { cls: styles.badgeQual, text: '✓', title: entry.advancedAsThird ? 'Classificada (melhor 3º lugar)' : 'Classificada' };
             else if (isEliminated)    badge = { cls: styles.badgeElim, text: '✗', title: 'Eliminada' };
 
             return (
