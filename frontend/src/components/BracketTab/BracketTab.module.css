@@ -78,8 +78,7 @@
 }
 
 .finalSection {
-  display: flex;
-  align-items: center;
+  align-self: center;
   min-width: max-content;
 }
 
