@@ -45,12 +45,16 @@ export default function MatchesTab() {
 
   const { data: matchesData, loading: matchesLoading } = usePolling('/api/matches', matchInterval);
 
+  const hasLive = useMemo(() => {
+    if (!matchesData?.games) return false;
+    return matchesData.games.some(
+      (g) => g.finished === 'FALSE' && g.time_elapsed !== 'notstarted',
+    );
+  }, [matchesData]);
+
   // Speed up polling to 5s while any match is live
   useEffect(() => {
     if (!matchesData?.games) return;
-    const hasLive = matchesData.games.some(
-      (g) => g.finished === 'FALSE' && g.time_elapsed !== 'notstarted',
-    );
     setMatchInterval(hasLive ? 5_000 : 15_000);
 
     // Set default filter once on first load (only if no saved preference)
@@ -58,6 +62,9 @@ export default function MatchesTab() {
       initialFilterSet.current = true;
       if (!hasLive) setFilter('today');
     }
+
+    // Fall back from live filter when no matches are live
+    if (filter === 'live' && !hasLive) setFilter('today');
   }, [matchesData]);
   const { data: teamsData } = usePolling('/api/teams', 60_000);
   const { data: stadiumsData } = usePolling('/api/stadiums', 300_000);
@@ -195,7 +202,7 @@ export default function MatchesTab() {
   return (
     <div className={styles.container}>
       <div className={styles.filters}>
-        {FILTERS.map(({ key, label }) => (
+        {FILTERS.filter(({ key }) => key !== 'live' || hasLive).map(({ key, label }) => (
           <button
             key={key}
             className={`${styles.filterBtn} ${filter === key ? styles.active : ''}`}
