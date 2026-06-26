@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useAutoReload } from './hooks/useAutoReload';
 import { useGoalDetector } from './hooks/useGoalDetector';
@@ -52,6 +52,17 @@ export default function App() {
     setActiveTab(key);
     localStorage.setItem('wc-tab', key);
   }
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const TAB_KEYS = { '1': 'matches', '2': 'groups', '3': 'bracket' };
+      if (TAB_KEYS[e.key]) handleTabChange(TAB_KEYS[e.key]);
+      if (e.key === 't' || e.key === 'T') toggle();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [toggle]);
 
   return (
     <div className={styles.app}>
