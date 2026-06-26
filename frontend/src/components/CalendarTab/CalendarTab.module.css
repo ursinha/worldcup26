@@ -109,6 +109,38 @@
   white-space: nowrap;
 }
 
+/* Cell background by highest phase importance */
+.cell.cellGroup {
+  background: var(--accent-dim);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.cell.cellR32 {
+  background: var(--surface-hi);
+  border-color: var(--border-hi);
+}
+
+.cell.cellR16 {
+  background: rgba(192, 138, 32, 0.06);
+  border-color: rgba(192, 138, 32, 0.25);
+}
+
+.cell.cellQF {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+}
+
+.cell.cellSF {
+  background: rgba(212, 160, 32, 0.15);
+  border-color: var(--gold);
+}
+
+.cell.cellFinal {
+  background: rgba(212, 160, 32, 0.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 6px var(--gold-dim);
+}
+
 /* Past days */
 .cell.past {
   opacity: 0.4;

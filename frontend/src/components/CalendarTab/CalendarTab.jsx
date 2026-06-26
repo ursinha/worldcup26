@@ -24,6 +24,28 @@ const PHASE_STYLE = {
   final:          'phaseFinal',
 };
 
+// Importance rank — higher = closer to final
+const PHASE_RANK = {
+  group:          0,
+  round_of_32:    1,
+  round_of_16:    2,
+  quarter_finals: 3,
+  semi_finals:    4,
+  third_place:    5,
+  final:          6,
+};
+
+// Cell background style keyed by highest phase
+const CELL_PHASE_STYLE = {
+  group:          'cellGroup',
+  round_of_32:    'cellR32',
+  round_of_16:    'cellR16',
+  quarter_finals: 'cellQF',
+  semi_finals:    'cellSF',
+  third_place:    'cellFinal',
+  final:          'cellFinal',
+};
+
 const BRAZIL_NAME = 'Brazil';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -70,9 +92,12 @@ export default function CalendarTab() {
     for (const game of matchesData.games) {
       const utc = gameToUTC(game.local_date, game.stadium_id);
       const { isoDate } = formatBRT(utc);
-      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false };
+      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false, topPhase: null };
       days[isoDate].phases.add(game.type);
       days[isoDate].count += 1;
+      if (!days[isoDate].topPhase || (PHASE_RANK[game.type] ?? 0) > (PHASE_RANK[days[isoDate].topPhase] ?? 0)) {
+        days[isoDate].topPhase = game.type;
+      }
       if (
         game.home_team_name_en === BRAZIL_NAME ||
         game.away_team_name_en === BRAZIL_NAME ||
@@ -110,7 +135,7 @@ export default function CalendarTab() {
             return (
               <div
                 key={iso}
-                className={`${styles.cell} ${info ? styles.hasMatches : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
+                className={`${styles.cell} ${info ? styles.hasMatches : ''} ${info?.topPhase ? styles[CELL_PHASE_STYLE[info.topPhase]] || '' : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
               >
                 <span className={styles.dayNum}>{day}</span>
                 {info && (
