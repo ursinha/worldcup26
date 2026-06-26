@@ -20,13 +20,11 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
       <div className={styles.groupTitle}>Melhores 3ºs Colocados</div>
       <table className={styles.table}>
         <colgroup>
-          <col style={{ width: 28 }} />
-          <col style={{ width: 130 }} />
-          {COLS.map((c) => <col key={c.key} style={{ width: 34 }} />)}
+          <col />
+          {COLS.map((c) => <col key={c.key} style={{ width: 30 }} />)}
         </colgroup>
         <thead>
           <tr>
-            <th className={styles.stat}></th>
             <th className={styles.teamCol}>Seleção</th>
             {COLS.map((c) => (
               <th key={c.key} className={styles.stat}>{c.label}</th>
@@ -42,14 +40,12 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
 
             return (
               <tr key={entry.team_id} className={rowClass}>
-                <td className={styles.stat}>
+                <td className={`${styles.teamCell} ${tpStyles.teamCellTp} ${entry.qualifying ? styles.qualBorder : styles.elimBorder}`}>
                   <span className={tpStyles.groupBadge}>{entry.group}</span>
-                </td>
-                <td className={`${styles.teamCell} ${entry.qualifying ? styles.qualBorder : styles.elimBorder}`}>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}
-                  <span className={styles.teamName}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
+                  <span className={`${styles.teamName} ${tpStyles.teamNameTp}`}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
                   {entry.isLive && <span className={tpStyles.liveDot} />}
                 </td>
                 {COLS.map((c) => (
