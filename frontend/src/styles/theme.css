@@ -19,6 +19,8 @@
   --red:           #ff4040;   /* live / error */
   --red-dim:       rgba(255, 64, 64, 0.16);
   --score-color:   #ffffff;   /* big score numbers */
+  --half-upper:    #4a90d9;   /* bracket upper half stripe */
+  --half-lower:    #d4a04a;   /* bracket lower half stripe */
 }
 
 [data-theme="light"] {
@@ -39,6 +41,8 @@
   --red:           #c71515;
   --red-dim:       rgba(199, 21, 21, 0.10);
   --score-color:   #0a1125;
+  --half-upper:    #2a6cb8;   /* bracket upper half stripe */
+  --half-lower:    #b8862a;   /* bracket lower half stripe */
 }
 
 /* ── Global resets ───────────────────────────────────────────────────────── */

@@ -67,11 +67,15 @@ export default function BracketTab() {
 
               {round.pairGroups.map((matchIds, pIdx) => {
                 const mid = Math.floor(round.pairGroups.length / 2);
-                const isLowerHalf = round.pairGroups.length > 1 && pIdx === mid;
+                const isLowerHalf = round.pairGroups.length > 1 && pIdx >= mid;
+                const isHalfStart = round.pairGroups.length > 1 && pIdx === mid;
+                const halfClass = round.pairGroups.length > 1
+                  ? (isLowerHalf ? styles.lowerHalf : styles.upperHalf)
+                  : '';
                 return (
                 <div
                   key={pIdx}
-                  className={`${styles.pair} ${pairHasConnector && matchIds.length > 1 ? styles.hasConnector : ''} ${isLowerHalf ? styles.halfDivider : ''}`}
+                  className={`${styles.pair} ${pairHasConnector && matchIds.length > 1 ? styles.hasConnector : ''} ${isHalfStart ? styles.halfDivider : ''} ${halfClass}`}
                   style={{
                     '--pair-connector-top': pairConnectorTop,
                     '--pair-connector-h': pairConnectorH,

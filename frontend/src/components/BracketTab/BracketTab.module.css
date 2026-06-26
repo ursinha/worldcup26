@@ -48,9 +48,22 @@
 }
 
 .halfDivider {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border);
+  margin-top: 3rem;
+}
+
+/* Colored left-edge stripes to distinguish bracket halves */
+.upperHalf,
+.lowerHalf {
+  border-left: 3px solid transparent;
+  padding-left: 6px;
+}
+
+.upperHalf {
+  border-left-color: var(--half-upper);
+}
+
+.lowerHalf {
+  border-left-color: var(--half-lower);
 }
 
 .thirdSection {
