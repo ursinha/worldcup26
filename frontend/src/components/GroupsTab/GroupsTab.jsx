@@ -16,13 +16,20 @@ export default function GroupsTab() {
   const { data: teamsData, loading: teamsLoading } = usePolling('/api/teams', 60_000);
   const { data: matchesData } = usePolling('/api/matches', 15_000);
 
-  const [subTab, setSubTab] = useState('groups');
+  const [subTab, changeSubTab] = useState(
+    () => localStorage.getItem('wc-groups-tab') ?? 'groups',
+  );
+
+  function changeSubTab(key) {
+    changeSubTab(key);
+    localStorage.setItem('wc-groups-tab', key);
+  }
 
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === 'g' || e.key === 'G') setSubTab('groups');
-      if (e.key === 'm' || e.key === 'M') setSubTab('thirds');
+      if (e.key === 'g' || e.key === 'G') changeSubTab('groups');
+      if (e.key === 'm' || e.key === 'M') changeSubTab('thirds');
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -57,7 +64,7 @@ export default function GroupsTab() {
           <button
             key={key}
             className={`${styles.subTab} ${subTab === key ? styles.subTabActive : ''}`}
-            onClick={() => setSubTab(key)}
+            onClick={() => changeSubTab(key)}
           >
             {label}
             <span className={styles.shortcut}>{shortcut}</span>

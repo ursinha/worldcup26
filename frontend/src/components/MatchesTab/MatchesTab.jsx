@@ -33,9 +33,15 @@ function buildDateGroups(games, reverse = false) {
 }
 
 export default function MatchesTab() {
-  const [filter, setFilter] = useState('live');
+  const savedFilter = localStorage.getItem('wc-matches-filter');
+  const [filter, setFilterRaw] = useState(savedFilter ?? 'live');
   const [matchInterval, setMatchInterval] = useState(15_000);
-  const initialFilterSet = useRef(false);
+  const initialFilterSet = useRef(!!savedFilter);
+
+  function setFilter(key) {
+    setFilterRaw(key);
+    localStorage.setItem('wc-matches-filter', key);
+  }
 
   const { data: matchesData, loading: matchesLoading } = usePolling('/api/matches', matchInterval);
 
@@ -47,7 +53,7 @@ export default function MatchesTab() {
     );
     setMatchInterval(hasLive ? 5_000 : 15_000);
 
-    // Set default filter once on first load
+    // Set default filter once on first load (only if no saved preference)
     if (!initialFilterSet.current) {
       initialFilterSet.current = true;
       if (!hasLive) setFilter('today');
