@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { projectStandings } from '../../utils/projectedStandings';
 import { rankThirdPlaceTeams } from '../../utils/thirdPlace';
@@ -7,8 +7,8 @@ import ThirdPlaceTable from './ThirdPlaceTable';
 import styles from './GroupsTab.module.css';
 
 const SUB_TABS = [
-  { key: 'groups', label: 'Grupos' },
-  { key: 'thirds', label: 'Melhores 3ºs' },
+  { key: 'groups', label: 'Grupos', shortcut: 'G' },
+  { key: 'thirds', label: 'Melhores 3ºs', shortcut: 'M' },
 ];
 
 export default function GroupsTab() {
@@ -17,6 +17,16 @@ export default function GroupsTab() {
   const { data: matchesData } = usePolling('/api/matches', 15_000);
 
   const [subTab, setSubTab] = useState('groups');
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'g' || e.key === 'G') setSubTab('groups');
+      if (e.key === 'm' || e.key === 'M') setSubTab('thirds');
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const teamMap = useMemo(() => {
     if (!teamsData?.teams) return {};
@@ -43,13 +53,14 @@ export default function GroupsTab() {
   return (
     <div className={styles.container}>
       <div className={styles.subTabs}>
-        {SUB_TABS.map(({ key, label }) => (
+        {SUB_TABS.map(({ key, label, shortcut }) => (
           <button
             key={key}
             className={`${styles.subTab} ${subTab === key ? styles.subTabActive : ''}`}
             onClick={() => setSubTab(key)}
           >
             {label}
+            <span className={styles.shortcut}>{shortcut}</span>
           </button>
         ))}
       </div>
