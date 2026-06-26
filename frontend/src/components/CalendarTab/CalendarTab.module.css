@@ -120,27 +120,44 @@
   content: '×';
 }
 
-/* Phase color variants */
+/* Phase color variants — progressive intensity toward final */
 .phaseGroup {
   color: var(--accent);
   background: var(--accent-dim);
 }
 
-.phaseKnockout {
+.phaseR32 {
   color: var(--text-2);
   background: var(--surface);
   border: 1px solid var(--border);
 }
 
-.phaseGold {
+.phaseR16 {
+  color: #c08a20;
+  background: rgba(192, 138, 32, 0.1);
+}
+
+.phaseQF {
   color: var(--gold);
   background: var(--gold-dim);
 }
 
-.phaseFinal {
+.phaseSF {
   color: var(--gold);
-  background: var(--gold-dim);
+  background: rgba(212, 160, 32, 0.18);
   font-weight: 800;
+}
+
+.phaseFinal {
+  color: #fff;
+  background: var(--gold);
+  font-weight: 800;
+}
+
+/* Brazil day — green/yellow left border */
+.cell.brazil {
+  border-left: 3px solid #009739;
+  border-right: 3px solid #FEDD00;
 }
 
 /* Legend */
@@ -157,4 +174,12 @@
   font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 3px;
+}
+
+.legendBrazil {
+  color: var(--text-2);
+  border-left: 3px solid #009739;
+  border-right: 3px solid #FEDD00;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
 }
