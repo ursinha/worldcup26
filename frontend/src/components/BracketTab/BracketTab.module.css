@@ -87,20 +87,29 @@
 }
 
 .finalBox {
-  border: 1px solid var(--gold-border);
+  border: 1.5px solid var(--gold);
   border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  background: var(--gold-dim);
+  padding: 0.6rem 0.85rem;
+  background: linear-gradient(
+    135deg,
+    var(--gold-dim) 0%,
+    rgba(212, 160, 32, 0.20) 50%,
+    var(--gold-dim) 100%
+  );
+  box-shadow:
+    0 0 12px rgba(212, 160, 32, 0.15),
+    inset 0 1px 0 rgba(212, 160, 32, 0.12);
 }
 
 .finalLabel {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   color: var(--gold);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
   text-align: center;
+  text-shadow: 0 0 8px rgba(212, 160, 32, 0.4);
 }
 
 .thirdBox {
