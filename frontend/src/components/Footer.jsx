@@ -20,15 +20,15 @@ export default function Footer() {
           <span className={styles.championship}>Copa do Mundo 2026</span>
         </div>
         <span className={styles.separator}>·</span>
+        <span className={styles.disclaimer}>Não afiliado à FIFA</span>
+      </div>
+      <div className={styles.row}>
         <span className={styles.author}>
           Feito por <a href="https://github.com/ursinha" target="_blank" rel="noopener noreferrer" className={styles.authorLink}>@ursinha</a> — a Copa do Mundo é maravilhosa&#8482;
         </span>
-      </div>
-      <div className={styles.row}>
+        <span className={styles.separator}>·</span>
         <span>commit</span>
         <span className={styles.commit}>{commit}</span>
-        <span className={styles.separator}>·</span>
-        <span className={styles.disclaimer}>Não afiliado à FIFA</span>
       </div>
     </div>
   );
