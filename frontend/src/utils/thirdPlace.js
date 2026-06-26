@@ -29,7 +29,7 @@ const CARD_POINTS = {
  * @param {Array} matches - all matches from /api/matches
  * @returns {Object} { teamId: fairPlayPoints (negative = worse) }
  */
-function computeFairPlayPoints(matches) {
+export function computeFairPlayPoints(matches) {
   const fpp = {};
   if (!matches?.length) return fpp;
 
@@ -74,20 +74,15 @@ export function rankThirdPlaceTeams(groups, matches) {
 
   const fpp = computeFairPlayPoints(matches);
 
-  // Sort teams within each group and pick index 2 (3rd place)
+  // Groups arrive already sorted (projectStandings) — 3rd place is index 2
   const thirds = [];
   for (const group of groups) {
-    const sorted = [...group.teams].sort((a, b) => {
-      if (+b.pts !== +a.pts) return +b.pts - +a.pts;
-      if (+b.gd !== +a.gd) return +b.gd - +a.gd;
-      return +b.gf - +a.gf;
-    });
-
-    if (sorted.length >= 3) {
+    const third = group.teams[2];
+    if (third) {
       thirds.push({
-        ...sorted[2],
+        ...third,
         group: group.name,
-        fpp: fpp[sorted[2].team_id] || 0,
+        fpp: fpp[third.team_id] || 0,
       });
     }
   }

@@ -1,3 +1,5 @@
+import { isGroupComplete } from './projectedStandings';
+
 /**
  * Bracket tree structure.
  * Each round is a list of pairGroups; each pairGroup is an ordered list of
@@ -62,24 +64,34 @@ export const THIRD_PLACE_ID = '103';
 
 // ---------------------------------------------------------------------------
 // Team resolution
+//
+// Group standings arrive already sorted (projectStandings applies the full
+// FIFA tiebreakers incl. head-to-head), so the winner is teams[0], the
+// runner-up teams[1] and the third-placed team teams[2].
 // ---------------------------------------------------------------------------
 
-function sortGroupTeams(teams) {
-  return [...teams].sort((a, b) => {
-    if (+b.pts !== +a.pts) return +b.pts - +a.pts;
-    if (+b.gd !== +a.gd) return +b.gd - +a.gd;
-    return +b.gf - +a.gf;
-  });
-}
-
 /**
- * Returns true when every team in the group has played all their group games,
- * meaning the standings are final (each team plays num_teams - 1 games).
+ * The upstream feed sometimes pre-fills a slot's team id before its source is
+ * actually decided (e.g. it guesses the current group runner-up). When a slot
+ * still carries a group/match label, the id is only trustworthy once that
+ * source is resolved. Returns true when the slot should be treated as a
+ * projection despite having a populated team id.
  */
-function isGroupComplete(teams) {
-  if (!teams?.length) return false;
-  const maxPossible = teams.length - 1;
-  return teams.every(t => +t.mp >= maxPossible);
+function isSlotSourceUnresolved(label, gameMap, groupMap) {
+  if (!label) return false;
+
+  const wg = label.match(/^Winner Group ([A-L])$/) || label.match(/^Runner-up Group ([A-L])$/);
+  if (wg) return !isGroupComplete(groupMap[wg[1]]?.teams);
+
+  if (/^3rd Group /.test(label)) {
+    const groups = Object.values(groupMap);
+    return !groups.length || !groups.every(g => isGroupComplete(g.teams));
+  }
+
+  const m = label.match(/^(?:Winner|Loser) Match (\d+)$/);
+  if (m) return gameMap[m[1]]?.finished !== 'TRUE';
+
+  return false;
 }
 
 /**
@@ -98,7 +110,10 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
   if (teamId && teamId !== '0') {
     const team = teamMap[teamId] ?? null;
     const group = team?.groups?.[0] ?? null;
-    return { team, projected: false, group };
+    // Trust the id only when the slot's source (group standings / feeding match)
+    // is actually decided; otherwise the feed is guessing — mark it projected.
+    const projected = isSlotSourceUnresolved(label, gameMap, groupMap);
+    return { team, projected, group };
   }
 
   if (!label) return { team: null, projected: false, group: null };
@@ -108,9 +123,8 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
   if (wg) {
     const group = groupMap[wg[1]];
     if (!group) return { team: null, projected: false, group: wg[1] };
-    const sorted = sortGroupTeams(group.teams);
     const groupComplete = isGroupComplete(group.teams);
-    return { team: teamMap[sorted[0]?.team_id] ?? null, projected: !groupComplete, group: wg[1] };
+    return { team: teamMap[group.teams[0]?.team_id] ?? null, projected: !groupComplete, group: wg[1] };
   }
 
   // "Runner-up Group X"
@@ -118,9 +132,8 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
   if (rug) {
     const group = groupMap[rug[1]];
     if (!group) return { team: null, projected: false, group: rug[1] };
-    const sorted = sortGroupTeams(group.teams);
     const groupComplete = isGroupComplete(group.teams);
-    return { team: teamMap[sorted[1]?.team_id] ?? null, projected: !groupComplete, group: rug[1] };
+    return { team: teamMap[group.teams[1]?.team_id] ?? null, projected: !groupComplete, group: rug[1] };
   }
 
   // "Winner Match N"
@@ -176,8 +189,7 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       if (assignedGroup) {
         const group = groupMap[assignedGroup];
         if (group) {
-          const sorted = sortGroupTeams(group.teams);
-          const team = teamMap[sorted[2]?.team_id] ?? null;
+          const team = teamMap[group.teams[2]?.team_id] ?? null;
           const allGroupsDone = Object.values(groupMap).every((g) => isGroupComplete(g.teams));
           return { team, projected: !allGroupsDone, group: assignedGroup };
         }

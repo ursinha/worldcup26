@@ -1,3 +1,4 @@
+import { isGroupComplete } from '../../utils/projectedStandings';
 import styles from './GroupTable.module.css';
 
 const COLS = [
@@ -12,11 +13,8 @@ const COLS = [
 ];
 
 export default function GroupTable({ group, teamMap }) {
-  const sortedTeams = [...group.teams].sort((a, b) => {
-    if (+b.pts !== +a.pts) return +b.pts - +a.pts;
-    if (+b.gd !== +a.gd) return +b.gd - +a.gd;
-    return +b.gf - +a.gf;
-  });
+  // group.teams is already fully sorted by projectStandings (incl. head-to-head)
+  const sortedTeams = group.teams;
 
   return (
     <div className={styles.group}>
@@ -37,7 +35,7 @@ export default function GroupTable({ group, teamMap }) {
         </thead>
         <tbody>
           {(() => {
-            const groupDone = sortedTeams.every(t => +t.mp >= 3);
+            const groupDone = isGroupComplete(sortedTeams);
             const thirdPts  = +(sortedTeams[2]?.pts ?? 0);
             return sortedTeams.map((entry, idx) => {
             const team = teamMap[entry.team_id];
