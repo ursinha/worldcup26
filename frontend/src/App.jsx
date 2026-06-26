@@ -76,9 +76,9 @@ export default function App() {
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'matches' && <MatchesTab />}
-        {activeTab === 'groups' && <GroupsTab />}
-        {activeTab === 'bracket' && <BracketTab />}
+        <div style={{ display: activeTab === 'matches' ? undefined : 'none' }}><MatchesTab /></div>
+        <div style={{ display: activeTab === 'groups' ? undefined : 'none' }}><GroupsTab /></div>
+        <div style={{ display: activeTab === 'bracket' ? undefined : 'none' }}><BracketTab /></div>
       </div>
       <Footer />
       <GoalToast goals={goals} onDismiss={dismiss} />
