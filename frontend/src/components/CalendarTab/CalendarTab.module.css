@@ -239,14 +239,3 @@
   border-radius: 3px;
 }
 
-.legendBrazil {
-  color: var(--text-1);
-  font-weight: 700;
-  border: 2px solid #009739;
-  background:
-    linear-gradient(135deg,
-      color-mix(in srgb, #009739 22%, transparent),
-      color-mix(in srgb, #FEDD00 22%, transparent));
-  padding-left: 0.4rem;
-  padding-right: 0.4rem;
-}

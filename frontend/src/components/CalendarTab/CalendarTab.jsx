@@ -193,7 +193,6 @@ export default function CalendarTab() {
         <span className={`${styles.legendItem} ${styles.phaseQF}`}>QUARTAS</span>
         <span className={`${styles.legendItem} ${styles.phaseSF}`}>SEMI</span>
         <span className={`${styles.legendItem} ${styles.phaseFinal}`}>FINAL</span>
-        <span className={`${styles.legendItem} ${styles.legendBrazil}`}>Brasil</span>
       </div>
     </div>
   );
