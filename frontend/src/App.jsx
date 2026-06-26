@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useAutoReload } from './hooks/useAutoReload';
+import { useGoalDetector } from './hooks/useGoalDetector';
 import StatusBar from './components/StatusBar';
 import Footer from './components/Footer';
+import GoalToast from './components/GoalToast';
 import MatchesTab from './components/MatchesTab/MatchesTab';
 import GroupsTab from './components/GroupsTab/GroupsTab';
 import BracketTab from './components/BracketTab/BracketTab';
@@ -44,6 +46,7 @@ export default function App() {
   );
   const { theme, toggle } = useTheme();
   useAutoReload();
+  const { goals, dismiss } = useGoalDetector();
 
   function handleTabChange(key) {
     setActiveTab(key);
@@ -78,6 +81,7 @@ export default function App() {
         {activeTab === 'bracket' && <BracketTab />}
       </div>
       <Footer />
+      <GoalToast goals={goals} onDismiss={dismiss} />
     </div>
   );
 }
