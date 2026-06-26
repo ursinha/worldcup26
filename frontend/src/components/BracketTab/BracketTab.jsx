@@ -171,23 +171,21 @@ export default function BracketTab() {
               showGroup={false}
             />
           </div>
-        </div>
-      </div>
 
-      {/* Third-place match */}
-      {thirdGame && (
-        <div className={styles.thirdSection}>
-          <div className={styles.thirdLabel}>Disputa de 3º Lugar</div>
-          <BracketSlot
-            game={thirdGame}
-            homeResolved={resolveSlot(thirdGame.home_team_id, thirdGame.home_team_label, gameMap, groupMap, teamMap)}
-            awayResolved={resolveSlot(thirdGame.away_team_id, thirdGame.away_team_label, gameMap, groupMap, teamMap)}
-            slotHeight={BASE}
-            hasConnector={false}
-            showGroup={false}
-          />
+          {thirdGame && (
+            <div className={styles.thirdBox}>
+              <div className={styles.thirdLabel}>Disputa de 3º Lugar</div>
+              <BracketSlot
+                game={thirdGame}
+                homeResolved={resolveSlot(thirdGame.home_team_id, thirdGame.home_team_label, gameMap, groupMap, teamMap)}
+                awayResolved={resolveSlot(thirdGame.away_team_id, thirdGame.away_team_label, gameMap, groupMap, teamMap)}
+                slotHeight={null}
+                hasConnector={false}
+                showGroup={false}
+              />
+            </div>
+          )}
         </div>
-      )}
     </div>
   );
 }
