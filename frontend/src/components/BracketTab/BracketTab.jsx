@@ -186,6 +186,7 @@ export default function BracketTab() {
             </div>
           )}
         </div>
+      </div>
     </div>
   );
 }
