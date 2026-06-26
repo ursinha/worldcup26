@@ -29,7 +29,10 @@ function TeamSide({ name, flag, side, projected }) {
   return (
     <div className={`${styles.team} ${side === 'away' ? styles.away : ''}`}>
       {flag && <img className={styles.flag} src={flag} alt={name} loading="lazy" />}
-      <span className={`${styles.teamName} ${projected ? styles.projected : ''}`}>{name}</span>
+      <span className={`${styles.teamName} ${projected ? styles.projected : ''}`}>
+        {name}
+        {projected && <span className={styles.projBadge}>proj</span>}
+      </span>
     </div>
   );
 }

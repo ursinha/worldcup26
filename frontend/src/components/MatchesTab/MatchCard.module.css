@@ -91,7 +91,21 @@
 
 .teamName.projected {
   font-style: italic;
-  opacity: 0.65;
+  font-weight: 400;
+  color: var(--text-3);
+  border-bottom: 1px dashed var(--border-hi);
+  padding-bottom: 1px;
+}
+
+.projBadge {
+  margin-left: 0.3rem;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
 .scoreOrTime {
