@@ -160,8 +160,8 @@ export default function BracketTab() {
         </div>
 
         <div className={styles.finalSection}>
-          <div className={styles.roundCol}>
-            <div className={styles.roundLabel}>{FINAL_ROUND.label}</div>
+          <div className={styles.finalBox}>
+            <div className={styles.finalLabel}>{FINAL_ROUND.label}</div>
             <BracketSlot
               game={finalGame ?? null}
               homeResolved={finalHome}
