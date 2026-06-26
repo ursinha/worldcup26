@@ -12,92 +12,89 @@ function sortTeams(teams) {
 }
 
 /**
- * Project current live match scores into group standings.
+ * Compute group standings entirely from match results.
  *
- * @param {Array} groups   - groups from /api/groups (each has .name, .teams[])
+ * Finished matches are the source of truth. Live matches are projected
+ * on top with the `isLive` flag set on affected teams.
+ *
+ * @param {Array} groups   - groups from /api/groups (used for group structure + team membership)
  * @param {Array} matches  - games from /api/matches
- * @returns {Array} new groups array with projected standings and `isLive` flag on affected teams
+ * @returns {Array} groups with computed standings, sorted by pts → gd → gf
  */
 export function projectStandings(groups, matches) {
-  if (!groups?.length || !matches?.length) return groups ?? [];
+  if (!groups?.length) return [];
 
-  // Find live group matches
-  const liveGroupMatches = matches.filter(
-    (g) => g.type === 'group' && matchStatus(g) === 'live',
-  );
-
-  if (liveGroupMatches.length === 0) return groups;
-
-  // Build a map: groupName → [{ team_id, deltaStats }]
-  const deltaMap = {};
-  for (const m of liveGroupMatches) {
-    const grp = m.group;
-    if (!grp) continue;
-    if (!deltaMap[grp]) deltaMap[grp] = {};
-
-    const homeId = m.home_team_id;
-    const awayId = m.away_team_id;
-    const homeScore = +m.home_score || 0;
-    const awayScore = +m.away_score || 0;
-
-    // Initialize deltas
-    if (!deltaMap[grp][homeId]) deltaMap[grp][homeId] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
-    if (!deltaMap[grp][awayId]) deltaMap[grp][awayId] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
-
-    const hd = deltaMap[grp][homeId];
-    const ad = deltaMap[grp][awayId];
-
-    // Match played
-    hd.mp += 1;
-    ad.mp += 1;
-
-    // Goals
-    hd.gf += homeScore;
-    hd.ga += awayScore;
-    hd.gd += homeScore - awayScore;
-    ad.gf += awayScore;
-    ad.ga += homeScore;
-    ad.gd += awayScore - homeScore;
-
-    // Result
-    if (homeScore > awayScore) {
-      hd.w += 1; hd.pts += 3;
-      ad.l += 1;
-    } else if (homeScore === awayScore) {
-      hd.d += 1; hd.pts += 1;
-      ad.d += 1; ad.pts += 1;
-    } else {
-      hd.l += 1;
-      ad.w += 1; ad.pts += 3;
+  // Initialize empty standings for every team in every group
+  const standingsMap = {};
+  for (const group of groups) {
+    standingsMap[group.name] = {};
+    for (const team of group.teams) {
+      standingsMap[group.name][team.team_id] = {
+        team_id: team.team_id,
+        mp: 0, w: 0, d: 0, l: 0,
+        gf: 0, ga: 0, gd: 0, pts: 0,
+        isLive: false,
+      };
     }
   }
 
-  // Apply deltas to cloned groups
-  return groups.map((group) => {
-    const groupDeltas = deltaMap[group.name];
-    if (!groupDeltas) return group;
+  if (!matches?.length) return groups;
 
-    const projectedTeams = group.teams.map((entry) => {
-      const delta = groupDeltas[entry.team_id];
-      if (!delta) return entry;
+  // Process all group matches (finished + live)
+  for (const m of matches) {
+    if (m.type !== 'group' || !m.group) continue;
 
-      return {
-        ...entry,
-        mp:  +entry.mp  + delta.mp,
-        w:   +entry.w   + delta.w,
-        d:   +entry.d   + delta.d,
-        l:   +entry.l   + delta.l,
-        gf:  +entry.gf  + delta.gf,
-        ga:  +entry.ga  + delta.ga,
-        gd:  +entry.gd  + delta.gd,
-        pts: +entry.pts + delta.pts,
-        isLive: true,
-      };
-    });
+    const status = matchStatus(m);
+    if (status === 'notstarted') continue;
 
-    return {
-      ...group,
-      teams: sortTeams(projectedTeams),
-    };
-  });
+    const grpStandings = standingsMap[m.group];
+    if (!grpStandings) continue;
+
+    const homeId = m.home_team_id;
+    const awayId = m.away_team_id;
+    if (!grpStandings[homeId] || !grpStandings[awayId]) continue;
+
+    const homeScore = +m.home_score || 0;
+    const awayScore = +m.away_score || 0;
+    const isLive = status === 'live';
+
+    const home = grpStandings[homeId];
+    const away = grpStandings[awayId];
+
+    // Matches played
+    home.mp += 1;
+    away.mp += 1;
+
+    // Goals
+    home.gf += homeScore;
+    home.ga += awayScore;
+    home.gd += homeScore - awayScore;
+    away.gf += awayScore;
+    away.ga += homeScore;
+    away.gd += awayScore - homeScore;
+
+    // Result
+    if (homeScore > awayScore) {
+      home.w += 1; home.pts += 3;
+      away.l += 1;
+    } else if (homeScore === awayScore) {
+      home.d += 1; home.pts += 1;
+      away.d += 1; away.pts += 1;
+    } else {
+      home.l += 1;
+      away.w += 1; away.pts += 3;
+    }
+
+    // Mark teams involved in live matches
+    if (isLive) {
+      home.isLive = true;
+      away.isLive = true;
+    }
+  }
+
+  // Build result groups with sorted standings
+  return groups.map((group) => ({
+    ...group,
+    teams: sortTeams(Object.values(standingsMap[group.name])),
+  }));
 }
