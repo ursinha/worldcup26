@@ -16,11 +16,13 @@ export default function Footer() {
           <rect x="44" y="78" width="12" height="8" rx="1" fill="#B8860B"/>
           <rect x="32" y="86" width="36" height="6" rx="3" fill="url(#ft)" stroke="#9A7400" strokeWidth="1"/>
         </svg>
-        <span className={styles.championship}>FIFA World Cup 2026&#8482;</span>
+        <span className={styles.championship}>Copa do Mundo 2026</span>
       </div>
       <span className={styles.separator}>·</span>
       <span>commit</span>
       <span className={styles.commit}>{commit}</span>
+      <span className={styles.separator}>·</span>
+      <span className={styles.disclaimer}>Não afiliado à FIFA</span>
     </div>
   );
 }

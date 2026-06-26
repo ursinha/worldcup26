@@ -61,7 +61,7 @@ export default function StatusBar() {
         <rect x="44" y="78" width="12" height="8" rx="1" fill="#B8860B"/>
         <rect x="32" y="86" width="36" height="6" rx="3" fill="url(#tg)" stroke="#9A7400" strokeWidth="1"/>
       </svg>
-      <span className={styles.label}>2026 FIFA World Cup</span>
+      <span className={styles.label}>Copa do Mundo 2026</span>
       <span className={styles.updated}>
         Última atualização: <span className={styles.time}>{lastUpdated} BRT</span>
       </span>

@@ -32,3 +32,8 @@
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-2);
 }
+
+.disclaimer {
+  font-style: italic;
+  color: var(--text-3);
+}
