@@ -48,6 +48,17 @@ const CELL_PHASE_STYLE = {
 
 const BRAZIL_NAME = 'Brazil';
 
+// Friendly stage names for the Brazil-match tooltip
+const STAGE_TITLE = {
+  group: 'Fase de grupos',
+  r32:   '16-avos de final',
+  r16:   'Oitavas de final',
+  qf:    'Quartas de final',
+  sf:    'Semifinal',
+  third: 'Disputa de 3º lugar',
+  final: 'Final',
+};
+
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 function buildMonthGrid(year, month) {
@@ -92,18 +103,25 @@ export default function CalendarTab() {
     for (const game of matchesData.games) {
       const utc = gameToUTC(game.local_date, game.stadium_id);
       const { isoDate } = formatBRT(utc);
-      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false, topPhase: null };
+      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false, topPhase: null, brazilMatch: null };
       days[isoDate].phases.add(game.type);
       days[isoDate].count += 1;
       if (!days[isoDate].topPhase || (PHASE_RANK[game.type] ?? 0) > (PHASE_RANK[days[isoDate].topPhase] ?? 0)) {
         days[isoDate].topPhase = game.type;
       }
-      if (
-        game.home_team_name_en === BRAZIL_NAME ||
-        game.away_team_name_en === BRAZIL_NAME ||
-        (brazilId && (game.home_team_id === brazilId || game.away_team_id === brazilId))
-      ) {
+
+      const brazilHome = game.home_team_name_en === BRAZIL_NAME || (brazilId && game.home_team_id === brazilId);
+      const brazilAway = game.away_team_name_en === BRAZIL_NAME || (brazilId && game.away_team_id === brazilId);
+      if (brazilHome || brazilAway) {
         days[isoDate].hasBrazil = true;
+        const opponent = brazilHome
+          ? (game.away_team_name_en ?? game.away_team_label ?? 'A definir')
+          : (game.home_team_name_en ?? game.home_team_label ?? 'A definir');
+        days[isoDate].brazilMatch = {
+          opponent,
+          time: formatBRT(utc).time,
+          stage: STAGE_TITLE[game.type] ?? game.type,
+        };
       }
     }
     return days;
@@ -132,11 +150,17 @@ export default function CalendarTab() {
             const isToday = iso === today;
             const isPast = iso < today;
 
+            const brazilTitle = info?.brazilMatch
+              ? `🇧🇷 Brasil × ${info.brazilMatch.opponent} · ${info.brazilMatch.time} BRT · ${info.brazilMatch.stage}`
+              : undefined;
+
             return (
               <div
                 key={iso}
                 className={`${styles.cell} ${info ? styles.hasMatches : ''} ${info?.topPhase ? styles[CELL_PHASE_STYLE[info.topPhase]] || '' : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
+                title={brazilTitle}
               >
+                {info?.hasBrazil && <span className={styles.brazilMark} aria-label="Jogo do Brasil">BRA</span>}
                 <span className={styles.dayNum}>{day}</span>
                 {info && (
                   <div className={styles.badges}>

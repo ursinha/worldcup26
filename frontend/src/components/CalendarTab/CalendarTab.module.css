@@ -55,6 +55,7 @@
 }
 
 .cell {
+  position: relative;
   aspect-ratio: 1;
   display: flex;
   flex-direction: column;
@@ -191,10 +192,35 @@
   font-weight: 800;
 }
 
-/* Brazil day — green/yellow left border */
+/* Brazil day — bold green/yellow treatment so it's unmistakable */
 .cell.brazil {
-  border-left: 3px solid #009739;
-  border-right: 3px solid #FEDD00;
+  border: 2px solid #009739;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, #009739 22%, transparent),
+      color-mix(in srgb, #FEDD00 22%, transparent));
+  box-shadow: 0 0 0 2px color-mix(in srgb, #FEDD00 55%, transparent);
+}
+
+.cell.brazil .dayNum {
+  color: var(--text-1);
+  font-weight: 800;
+}
+
+/* "BRA" corner chip */
+.brazilMark {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  padding: 0 3px;
+  border-radius: 3px;
+  color: #005c23;
+  background: #FEDD00;
+  pointer-events: none;
 }
 
 /* Legend */
@@ -214,9 +240,13 @@
 }
 
 .legendBrazil {
-  color: var(--text-2);
-  border-left: 3px solid #009739;
-  border-right: 3px solid #FEDD00;
+  color: var(--text-1);
+  font-weight: 700;
+  border: 2px solid #009739;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, #009739 22%, transparent),
+      color-mix(in srgb, #FEDD00 22%, transparent));
   padding-left: 0.4rem;
   padding-right: 0.4rem;
 }
