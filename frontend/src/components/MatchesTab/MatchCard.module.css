@@ -89,6 +89,11 @@
   min-width: 0;
 }
 
+.teamName.projected {
+  font-style: italic;
+  opacity: 0.65;
+}
+
 .scoreOrTime {
   display: flex;
   flex-direction: column;

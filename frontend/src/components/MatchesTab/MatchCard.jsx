@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { gameToUTC, formatBRT } from '../../utils/time';
 import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
+import { resolveSlot } from '../../utils/bracket';
 import styles from './MatchCard.module.css';
 
 function useMatchClock(game, isLive) {
@@ -24,22 +25,35 @@ function useMatchClock(game, isLive) {
   return clock;
 }
 
-function TeamSide({ name, flag, side }) {
+function TeamSide({ name, flag, side, projected }) {
   return (
     <div className={`${styles.team} ${side === 'away' ? styles.away : ''}`}>
       {flag && <img className={styles.flag} src={flag} alt={name} loading="lazy" />}
-      <span className={styles.teamName}>{name}</span>
+      <span className={`${styles.teamName} ${projected ? styles.projected : ''}`}>{name}</span>
     </div>
   );
 }
 
-export default function MatchCard({ game, teamMap, stadiumMap }) {
+export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap, thirdPlaceAssignment }) {
   const status = matchStatus(game);
   const isLive = status === 'live';
   const isFinished = status === 'finished';
 
   const homeTeam = teamMap[game.home_team_id];
   const awayTeam = teamMap[game.away_team_id];
+
+  // Resolve knockout team names when home_team_name_en is absent
+  const homeResolved = (!game.home_team_name_en && gameMap && groupMap)
+    ? resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, 0, { thirdPlaceAssignment, currentMatchId: game.id })
+    : null;
+  const awayResolved = (!game.away_team_name_en && gameMap && groupMap)
+    ? resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, 0, { thirdPlaceAssignment, currentMatchId: game.id })
+    : null;
+
+  const homeName = game.home_team_name_en ?? homeResolved?.team?.name_en ?? game.home_team_label ?? '?';
+  const awayName = game.away_team_name_en ?? awayResolved?.team?.name_en ?? game.away_team_label ?? '?';
+  const homeFlag = homeTeam?.flag ?? homeResolved?.team?.flag;
+  const awayFlag = awayTeam?.flag ?? awayResolved?.team?.flag;
   const stadium  = stadiumMap[game.stadium_id];
 
   const utcDate = gameToUTC(game.local_date, game.stadium_id);
@@ -91,7 +105,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
 
       {/* Teams + Score/Time */}
       <div className={styles.teams}>
-        <TeamSide name={game.home_team_name_en} flag={homeTeam?.flag} side="home" />
+        <TeamSide name={homeName} flag={homeFlag} side="home" projected={homeResolved?.projected} />
 
         <div className={styles.scoreOrTime}>
           {isFinished || isLive ? (
@@ -114,7 +128,7 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
           )}
         </div>
 
-        <TeamSide name={game.away_team_name_en} flag={awayTeam?.flag} side="away" />
+        <TeamSide name={awayName} flag={awayFlag} side="away" projected={awayResolved?.projected} />
       </div>
 
       {/* Scorers */}

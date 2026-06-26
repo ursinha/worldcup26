@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { gameToUTC, formatBRT, todayBRT } from '../../utils/time';
 import { matchStatus } from '../../utils/parsers';
+import { resolveSlot } from '../../utils/bracket';
+import { projectStandings } from '../../utils/projectedStandings';
+import { rankThirdPlaceTeams, resolveThirdPlaceSlots } from '../../utils/thirdPlace';
 import MatchCard from './MatchCard';
 import styles from './MatchesTab.module.css';
 
@@ -63,6 +66,30 @@ export default function MatchesTab() {
     if (!stadiumsData?.stadiums) return {};
     return Object.fromEntries(stadiumsData.stadiums.map((s) => [s.id, s]));
   }, [stadiumsData]);
+
+  const { data: groupsData } = usePolling('/api/groups', 15_000);
+
+  const gameMap = useMemo(() => {
+    if (!matchesData?.games) return {};
+    return Object.fromEntries(matchesData.games.map((g) => [g.id, g]));
+  }, [matchesData]);
+
+  const projectedGroups = useMemo(() => {
+    if (!groupsData?.groups) return [];
+    return projectStandings(groupsData.groups, matchesData?.games);
+  }, [groupsData, matchesData]);
+
+  const groupMap = useMemo(() => {
+    if (!projectedGroups.length) return {};
+    return Object.fromEntries(projectedGroups.map((g) => [g.name, g]));
+  }, [projectedGroups]);
+
+  const thirdPlaceAssignment = useMemo(() => {
+    const ranked = rankThirdPlaceTeams(projectedGroups, matchesData?.games);
+    const qualifyingGroups = ranked.filter((t) => t.qualifying).map((t) => t.group);
+    if (qualifyingGroups.length !== 8) return null;
+    return resolveThirdPlaceSlots(qualifyingGroups);
+  }, [projectedGroups, matchesData]);
 
   // Filter + sort games
   const today = todayBRT();
@@ -145,7 +172,7 @@ export default function MatchesTab() {
       <div className={styles.dateHeading}>{label}</div>
       <div className={styles.cards}>
         {games.map((game) => (
-          <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+          <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} gameMap={gameMap} groupMap={groupMap} thirdPlaceAssignment={thirdPlaceAssignment} />
         ))}
       </div>
     </div>
@@ -193,13 +220,13 @@ export default function MatchesTab() {
               <div className={styles.dateHeading}>{label}</div>
               <div className={styles.cards}>
                 {active.map((game) => (
-                  <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+                  <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} gameMap={gameMap} groupMap={groupMap} thirdPlaceAssignment={thirdPlaceAssignment} />
                 ))}
                 {finished.length > 0 && (
                   <>
                     <div className={styles.sectionDivider}>Encerradas</div>
                     {finished.map((game) => (
-                      <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} />
+                      <MatchCard key={game.id} game={game} teamMap={teamMap} stadiumMap={stadiumMap} gameMap={gameMap} groupMap={groupMap} thirdPlaceAssignment={thirdPlaceAssignment} />
                     ))}
                   </>
                 )}
