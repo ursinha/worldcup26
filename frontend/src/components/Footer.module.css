@@ -4,9 +4,28 @@
   justify-content: center;
   gap: 0.4rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--border-faint);
+  border-top: 1px solid var(--gold-border, rgba(212, 160, 32, 0.25));
   font-size: 0.7rem;
   color: var(--text-3);
+}
+
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.trophyIcon {
+  flex-shrink: 0;
+}
+
+.championship {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.separator {
+  color: var(--border-hi);
 }
 
 .commit {

@@ -26,6 +26,11 @@ function ToastItem({ goal, onDismiss }) {
       className={`${styles.toast} ${exiting ? styles.exiting : ''}`}
       onClick={() => onDismiss(goal.id)}
     >
+      <div className={styles.confetti} aria-hidden="true">
+        {Array.from({ length: 12 }, (_, i) => (
+          <span key={i} className={styles.particle} style={{ '--i': i }} />
+        ))}
+      </div>
       <div className={styles.header}>
         <span className={styles.goalIcon}>⚽</span>
         <span className={styles.goalLabel}>GOL!</span>

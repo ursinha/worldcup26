@@ -10,6 +10,8 @@
 }
 
 .toast {
+  position: relative;
+  overflow: visible;
   pointer-events: auto;
   background: var(--surface);
   border: 1px solid var(--accent);
@@ -39,6 +41,41 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* Confetti burst */
+.confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: burst 0.8s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.03s);
+  opacity: 0;
+}
+
+.particle:nth-child(3n)   { background: #FFD700; }
+.particle:nth-child(3n+1) { background: #00e07a; }
+.particle:nth-child(3n+2) { background: #ffffff; width: 4px; height: 4px; }
+
+@keyframes burst {
+  0% {
+    opacity: 1;
+    transform: rotate(calc(var(--i) * 30deg)) translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 30deg)) translateX(60px) scale(0.3);
   }
 }
 
