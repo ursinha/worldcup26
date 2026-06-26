@@ -16,6 +16,36 @@
   }
 }
 
+.subTabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.subTab {
+  padding: 0.4rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.subTab:hover {
+  color: var(--text-2);
+  background: var(--surface-hi);
+}
+
+.subTabActive {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
 .loading {
   text-align: center;
   color: var(--text-3);

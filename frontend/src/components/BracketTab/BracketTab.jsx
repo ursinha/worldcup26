@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { BRACKET_ROUNDS, THIRD_PLACE_ID, resolveSlot } from '../../utils/bracket';
+import { projectStandings } from '../../utils/projectedStandings';
+import { rankThirdPlaceTeams, resolveThirdPlaceSlots } from '../../utils/thirdPlace';
 import BracketSlot from './BracketSlot';
 import styles from './BracketTab.module.css';
 
@@ -17,15 +19,31 @@ export default function BracketTab() {
     return Object.fromEntries(matchesData.games.map((g) => [g.id, g]));
   }, [matchesData]);
 
-  const groupMap = useMemo(() => {
-    if (!groupsData?.groups) return {};
-    return Object.fromEntries(groupsData.groups.map((g) => [g.name, g]));
-  }, [groupsData]);
-
   const teamMap = useMemo(() => {
     if (!teamsData?.teams) return {};
     return Object.fromEntries(teamsData.teams.map((t) => [t.id, t]));
   }, [teamsData]);
+
+  // Projected groups for 3rd-place resolution
+  const projectedGroups = useMemo(() => {
+    if (!groupsData?.groups) return [];
+    return projectStandings(groupsData.groups, matchesData?.games);
+  }, [groupsData, matchesData]);
+
+  const groupMap = useMemo(() => {
+    if (!projectedGroups.length) return {};
+    return Object.fromEntries(projectedGroups.map((g) => [g.name, g]));
+  }, [projectedGroups]);
+
+  // Compute 3rd-place assignment for bracket resolution
+  const thirdPlaceAssignment = useMemo(() => {
+    const ranked = rankThirdPlaceTeams(projectedGroups);
+    const qualifyingGroups = ranked
+      .filter((t) => t.qualifying)
+      .map((t) => t.group);
+    if (qualifyingGroups.length !== 8) return null;
+    return resolveThirdPlaceSlots(qualifyingGroups);
+  }, [projectedGroups]);
 
   if (loading) return <div className={styles.loading}>Carregando chaveamento…</div>;
 
@@ -37,14 +55,9 @@ export default function BracketTab() {
         {BRACKET_ROUNDS.map((round, rIdx) => {
           const slotH = BASE * round.slotMult;
           const isFinalRound = rIdx === BRACKET_ROUNDS.length - 1;
-          // Pairs in the LAST column don't need a right-side connector
           const pairHasConnector = !isFinalRound;
-          // Slots in all rounds except the first need a left-side connector
           const slotHasConnector = rIdx > 0;
 
-          // Vertical connector measurements for this round's pairs
-          // top  = distance from pair top to center of first slot = slotH / 2
-          // h    = distance from center of first slot to center of second slot = slotH
           const pairConnectorTop = `${slotH / 2}px`;
           const pairConnectorH = `${slotH}px`;
 
@@ -66,12 +79,15 @@ export default function BracketTab() {
                 >
                   {matchIds.map((matchId) => {
                     const game = gameMap[matchId];
+                    const opts = { thirdPlaceAssignment, currentMatchId: matchId };
                     const homeResolved = resolveSlot(
                       game?.home_team_id,
                       game?.home_team_label,
                       gameMap,
                       groupMap,
                       teamMap,
+                      0,
+                      opts,
                     );
                     const awayResolved = resolveSlot(
                       game?.away_team_id,
@@ -79,6 +95,8 @@ export default function BracketTab() {
                       gameMap,
                       groupMap,
                       teamMap,
+                      0,
+                      opts,
                     );
 
                     return (

@@ -86,8 +86,12 @@ function isGroupComplete(teams) {
  * Resolve a slot (teamId + label from the API) to { team, projected }.
  * - team       : team object from teamMap, or null if unknown
  * - projected  : true when the result is based on current standings (not confirmed)
+ *
+ * @param {Object} opts - optional extra context
+ * @param {Object} opts.thirdPlaceAssignment - { matchId: groupLetter } from resolveThirdPlaceSlots
+ * @param {string} opts.currentMatchId - the match ID being resolved (for 3rd-place lookup)
  */
-export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0) {
+export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0, opts = {}) {
   if (depth > 5) return { team: null, projected: false, group: null };
 
   // API already assigned a real team
@@ -131,8 +135,8 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
     // Recurse to collect source groups from both sides
-    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
-    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
+    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1, opts);
+    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1, opts);
     const unique = [...new Set([homeR.group, awayR.group].filter(Boolean))];
     return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
@@ -148,15 +152,28 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
       const team = teamMap[loserId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
-    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1);
-    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1);
+    const homeR = resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, depth + 1, opts);
+    const awayR = resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, depth + 1, opts);
     const unique = [...new Set([homeR.group, awayR.group].filter(Boolean))];
     return { team: null, projected: true, group: unique.length ? unique.join('/') : null };
   }
 
-  // "3rd Group A/B/…" – show candidate groups as badge
+  // "3rd Group A/B/…" – resolve via assignment map if available
   const tg = label.match(/^3rd Group (.+)$/);
   if (tg) {
+    const { thirdPlaceAssignment, currentMatchId } = opts;
+    if (thirdPlaceAssignment && currentMatchId) {
+      const assignedGroup = thirdPlaceAssignment[currentMatchId];
+      if (assignedGroup) {
+        const group = groupMap[assignedGroup];
+        if (group) {
+          const sorted = sortGroupTeams(group.teams);
+          const team = teamMap[sorted[2]?.team_id] ?? null;
+          const allGroupsDone = Object.values(groupMap).every((g) => isGroupComplete(g.teams));
+          return { team, projected: !allGroupsDone, group: assignedGroup };
+        }
+      }
+    }
     return { team: null, projected: true, group: tg[1] };
   }
 

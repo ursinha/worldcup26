@@ -120,3 +120,23 @@
 .elimBorder {
   border-left: 3px solid var(--border);
 }
+
+/* Live match projected rows */
+.liveRow td.stat {
+  font-style: italic;
+}
+
+.liveDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
