@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { gameToUTC, formatBRT, todayBRT } from '../../utils/time';
 import styles from './CalendarTab.module.css';
@@ -129,6 +129,21 @@ export default function CalendarTab() {
 
   const today = todayBRT();
 
+  // Tap-to-show Brazil match info (mobile has no hover for the title tooltip)
+  const [popover, setPopover] = useState(null);
+  useEffect(() => {
+    if (!popover) return;
+    const close = () => setPopover(null);
+    document.addEventListener('click', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('click', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [popover]);
+
   if (loading) return <div className={styles.loading}>Carregando calendário…</div>;
 
   function renderMonth(year, month) {
@@ -159,6 +174,17 @@ export default function CalendarTab() {
                 key={iso}
                 className={`${styles.cell} ${info ? styles.hasMatches : ''} ${info?.topPhase ? styles[CELL_PHASE_STYLE[info.topPhase]] || '' : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
                 title={brazilTitle}
+                onClick={(e) => {
+                  if (!info?.brazilMatch) { setPopover(null); return; }
+                  e.stopPropagation();
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setPopover((p) => (p?.iso === iso ? null : {
+                    iso,
+                    text: brazilTitle,
+                    top: r.bottom + 4,
+                    left: Math.min(r.left, window.innerWidth - 236),
+                  }));
+                }}
               >
                 {info?.hasBrazil && <span className={styles.brazilMark} aria-label="Jogo do Brasil">BRA</span>}
                 <span className={styles.dayNum}>{day}</span>
@@ -194,6 +220,12 @@ export default function CalendarTab() {
         <span className={`${styles.legendItem} ${styles.phaseSF}`}>SEMI</span>
         <span className={`${styles.legendItem} ${styles.phaseFinal}`}>FINAL</span>
       </div>
+
+      {popover && (
+        <div className={styles.dayPopover} style={{ top: popover.top, left: popover.left }} role="tooltip">
+          {popover.text}
+        </div>
+      )}
     </div>
   );
 }
