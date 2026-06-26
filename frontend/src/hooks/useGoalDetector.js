@@ -131,6 +131,25 @@ export function useGoalDetector() {
     prevScoresRef.current = currentScores;
   }, [data]);
 
+  // Dev helper: call window.__testGoal() in the console to trigger a fake toast
+  useEffect(() => {
+    window.__testGoal = (teamName = 'Brazil', scorer = 'Vini Jr. 73\'') => {
+      const fake = {
+        id: ++goalIdCounter,
+        matchId: 'test',
+        teamName,
+        scorer,
+        homeScore: 1,
+        awayScore: 0,
+        homeName: teamName,
+        awayName: 'Argentina',
+      };
+      setGoals((prev) => [...prev, fake]);
+      fireNotifications([fake]);
+    };
+    return () => { delete window.__testGoal; };
+  }, []);
+
   return { goals, dismiss };
 }
 
