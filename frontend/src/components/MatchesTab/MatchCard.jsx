@@ -53,6 +53,8 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
     ? resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, 0, { thirdPlaceAssignment, currentMatchId: game.id })
     : null;
 
+  const homeProjected = homeResolved?.projected && !!homeResolved?.team;
+  const awayProjected = awayResolved?.projected && !!awayResolved?.team;
   const homeName = game.home_team_name_en ?? homeResolved?.team?.name_en ?? game.home_team_label ?? '?';
   const awayName = game.away_team_name_en ?? awayResolved?.team?.name_en ?? game.away_team_label ?? '?';
   const homeFlag = homeTeam?.flag ?? homeResolved?.team?.flag;
@@ -108,7 +110,7 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
 
       {/* Teams + Score/Time */}
       <div className={styles.teams}>
-        <TeamSide name={homeName} flag={homeFlag} side="home" projected={homeResolved?.projected} />
+        <TeamSide name={homeName} flag={homeFlag} side="home" projected={homeProjected} />
 
         <div className={styles.scoreOrTime}>
           {isFinished || isLive ? (
@@ -131,7 +133,7 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
           )}
         </div>
 
-        <TeamSide name={awayName} flag={awayFlag} side="away" projected={awayResolved?.projected} />
+        <TeamSide name={awayName} flag={awayFlag} side="away" projected={awayProjected} />
       </div>
 
       {/* Scorers */}
