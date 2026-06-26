@@ -5,7 +5,7 @@ import styles from './CalendarTab.module.css';
 
 const PHASE_LABELS = {
   group:  'GRUPOS',
-  r32:    'R32',
+  r32:    'PRÉ-OITAVAS',
   r16:    'OITAVAS',
   qf:     'QUARTAS',
   sf:     'SEMI',
@@ -164,7 +164,7 @@ export default function CalendarTab() {
       </div>
       <div className={styles.legend}>
         <span className={`${styles.legendItem} ${styles.phaseGroup}`}>GRUPOS</span>
-        <span className={`${styles.legendItem} ${styles.phaseR32}`}>R32</span>
+        <span className={`${styles.legendItem} ${styles.phaseR32}`}>PRÉ-OITAVAS</span>
         <span className={`${styles.legendItem} ${styles.phaseR16}`}>OITAVAS</span>
         <span className={`${styles.legendItem} ${styles.phaseQF}`}>QUARTAS</span>
         <span className={`${styles.legendItem} ${styles.phaseSF}`}>SEMI</span>

@@ -27,7 +27,7 @@ export function stageLabel(game) {
     return `Grupo ${game.group} · MD${game.matchday}`;
   }
   const labels = {
-    r32: 'Oitavas de Final (R32)',
+    r32: 'Pré-Oitavas de Final',
     r16: 'Oitavas de Final',
     qf: 'Quartas de Final',
     sf: 'Semifinal',
