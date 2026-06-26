@@ -21,14 +21,12 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
       <div className={styles.groupTitle}>Melhores 3ºs Colocados</div>
       <table className={styles.table}>
         <colgroup>
-          <col style={{ width: 28 }} />
           <col style={{ width: 40 }} />
           <col />
           {COLS.map((c) => <col key={c.key} style={{ width: 34 }} />)}
         </colgroup>
         <thead>
           <tr>
-            <th className={styles.teamCol}>#</th>
             <th className={styles.stat}>Grp</th>
             <th className={styles.teamCol}>Seleção</th>
             {COLS.map((c) => (
@@ -45,9 +43,6 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
 
             return (
               <tr key={entry.team_id} className={rowClass}>
-                <td style={{ padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
-                  <span className={styles.pos}>{idx + 1}</span>
-                </td>
                 <td className={styles.stat}>
                   <span className={tpStyles.groupBadge}>{entry.group}</span>
                 </td>
