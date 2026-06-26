@@ -33,8 +33,8 @@ export default function GroupsTab() {
   }, [projectedGroups]);
 
   const rankedThirds = useMemo(() => {
-    return rankThirdPlaceTeams(projectedGroups);
-  }, [projectedGroups]);
+    return rankThirdPlaceTeams(projectedGroups, matchesData?.games);
+  }, [projectedGroups, matchesData]);
 
   if (groupsLoading) {
     return <div className={styles.loading}>Carregando grupos…</div>;

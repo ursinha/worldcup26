@@ -2,15 +2,77 @@
  * 3rd-place ranking and bracket slot assignment.
  */
 
+// ---------------------------------------------------------------------------
+// Fair play points from match events
+// ---------------------------------------------------------------------------
+
+/**
+ * FIFA fair play point deductions per card type:
+ *   yellow card          = -1
+ *   indirect red (2× yellow) = -3
+ *   direct red           = -4
+ *   yellow + direct red (same game) = -5
+ *
+ * Since we can't distinguish indirect vs direct red from the event data alone,
+ * we treat all red_card events as direct reds (-4) and yellow_card as -1.
+ * This is a simplification but matches the most common scoring approach
+ * when detailed card subtypes aren't available.
+ */
+const CARD_POINTS = {
+  yellow_card: -1,
+  red_card: -4,
+};
+
+/**
+ * Compute fair play points per team from group match events.
+ *
+ * @param {Array} matches - all matches from /api/matches
+ * @returns {Object} { teamId: fairPlayPoints (negative = worse) }
+ */
+function computeFairPlayPoints(matches) {
+  const fpp = {};
+  if (!matches?.length) return fpp;
+
+  for (const match of matches) {
+    if (match.type !== 'group') continue;
+    if (!match.events?.length) continue;
+
+    const teamIds = { home: match.home_team_id, away: match.away_team_id };
+
+    for (const event of match.events) {
+      const pts = CARD_POINTS[event.type];
+      if (pts === undefined) continue;
+      const teamId = teamIds[event.team];
+      if (!teamId) continue;
+      fpp[teamId] = (fpp[teamId] || 0) + pts;
+    }
+  }
+
+  return fpp;
+}
+
+// ---------------------------------------------------------------------------
+// 3rd-place ranking
+// ---------------------------------------------------------------------------
+
 /**
  * Extract and rank all 3rd-place teams from projected groups.
  *
- * @param {Array} groups - projected groups (sorted standings)
- * @returns {Array} ranked 3rd-place entries: { group, team_id, mp, w, d, l, gf, ga, gd, pts, isLive }
- *                  sorted by pts → gd → gf, with `qualifying` flag (top 8)
+ * FIFA tiebreakers for best third-placed teams:
+ *   1. Points
+ *   2. Goal difference
+ *   3. Goals scored
+ *   4. Fair play points (fewer deductions = better)
+ *   5. Drawing of lots (cannot be implemented)
+ *
+ * @param {Array} groups  - projected groups (sorted standings)
+ * @param {Array} matches - all matches from /api/matches (for fair play calculation)
+ * @returns {Array} ranked 3rd-place entries with `qualifying` flag (top 8)
  */
-export function rankThirdPlaceTeams(groups) {
+export function rankThirdPlaceTeams(groups, matches) {
   if (!groups?.length) return [];
+
+  const fpp = computeFairPlayPoints(matches);
 
   // Sort teams within each group and pick index 2 (3rd place)
   const thirds = [];
@@ -25,15 +87,17 @@ export function rankThirdPlaceTeams(groups) {
       thirds.push({
         ...sorted[2],
         group: group.name,
+        fpp: fpp[sorted[2].team_id] || 0,
       });
     }
   }
 
-  // Sort by FIFA best-3rd tiebreakers: pts → gd → gf
+  // Sort by FIFA best-3rd tiebreakers: pts → gd → gf → fair play (higher = better)
   thirds.sort((a, b) => {
     if (+b.pts !== +a.pts) return +b.pts - +a.pts;
     if (+b.gd !== +a.gd) return +b.gd - +a.gd;
-    return +b.gf - +a.gf;
+    if (+b.gf !== +a.gf) return +b.gf - +a.gf;
+    return b.fpp - a.fpp; // less negative = fewer cards = better
   });
 
   // Top 8 qualify, bottom 4 eliminated

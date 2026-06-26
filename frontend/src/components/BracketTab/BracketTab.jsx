@@ -37,13 +37,13 @@ export default function BracketTab() {
 
   // Compute 3rd-place assignment for bracket resolution
   const thirdPlaceAssignment = useMemo(() => {
-    const ranked = rankThirdPlaceTeams(projectedGroups);
+    const ranked = rankThirdPlaceTeams(projectedGroups, matchesData?.games);
     const qualifyingGroups = ranked
       .filter((t) => t.qualifying)
       .map((t) => t.group);
     if (qualifyingGroups.length !== 8) return null;
     return resolveThirdPlaceSlots(qualifyingGroups);
-  }, [projectedGroups]);
+  }, [projectedGroups, matchesData]);
 
   if (loading) return <div className={styles.loading}>Carregando chaveamento…</div>;
 

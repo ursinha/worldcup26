@@ -10,6 +10,7 @@ const COLS = [
   { key: 'ga', label: 'GC' },
   { key: 'gd', label: 'SG' },
   { key: 'pts', label: 'PTS' },
+  { key: 'fpp', label: 'FP' },
 ];
 
 export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
