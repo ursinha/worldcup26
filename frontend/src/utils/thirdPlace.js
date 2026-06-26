@@ -56,6 +56,20 @@ export function computeFairPlayPoints(matches) {
 // ---------------------------------------------------------------------------
 
 /**
+ * FIFA best-third tiebreakers, as a comparator (return < 0 when `a` ranks
+ * ahead of `b`): points → goal difference → goals scored → fair play.
+ * Head-to-head does not apply across groups (these teams never met), so this
+ * is the complete cross-group key. Returns 0 only on an exact dead-heat, which
+ * FIFA resolves by drawing of lots.
+ */
+export function compareThird(a, b) {
+  if (+b.pts !== +a.pts) return +b.pts - +a.pts;
+  if (+b.gd !== +a.gd) return +b.gd - +a.gd;
+  if (+b.gf !== +a.gf) return +b.gf - +a.gf;
+  return (b.fpp || 0) - (a.fpp || 0); // less negative = fewer cards = better
+}
+
+/**
  * Extract and rank all 3rd-place teams from projected groups.
  *
  * FIFA tiebreakers for best third-placed teams:
@@ -88,12 +102,7 @@ export function rankThirdPlaceTeams(groups, matches) {
   }
 
   // Sort by FIFA best-3rd tiebreakers: pts → gd → gf → fair play (higher = better)
-  thirds.sort((a, b) => {
-    if (+b.pts !== +a.pts) return +b.pts - +a.pts;
-    if (+b.gd !== +a.gd) return +b.gd - +a.gd;
-    if (+b.gf !== +a.gf) return +b.gf - +a.gf;
-    return b.fpp - a.fpp; // less negative = fewer cards = better
-  });
+  thirds.sort(compareThird);
 
   // Top 8 qualify, bottom 4 eliminated
   return thirds.map((t, i) => ({

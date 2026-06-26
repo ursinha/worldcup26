@@ -1,5 +1,5 @@
 import { matchStatus } from './parsers';
-import { computeFairPlayPoints } from './thirdPlace';
+import { computeFairPlayPoints, compareThird } from './thirdPlace';
 
 /**
  * Compare two teams by the overall FIFA criteria (applied across all group
@@ -143,6 +143,7 @@ export function computeClinch(sortedTeams, groupMatches) {
         minPts: +t.pts, maxPts: +t.pts,
       }])),
       thirdFloor: thirdPts, thirdCeil: thirdPts,
+      complete: true,
     };
   }
 
@@ -154,6 +155,7 @@ export function computeClinch(sortedTeams, groupMatches) {
         guaranteedTop3: false, canTop2: true, minPts: minPts[id], maxPts: maxPts[id],
       }])),
       thirdFloor: 0, thirdCeil: Infinity,
+      complete: false,
     };
   }
 
@@ -196,6 +198,7 @@ export function computeClinch(sortedTeams, groupMatches) {
       minPts: minPts[id], maxPts: maxPts[id],
     }])),
     thirdFloor, thirdCeil,
+    complete: false,
   };
 }
 
@@ -204,34 +207,63 @@ export function computeClinch(sortedTeams, groupMatches) {
  * for 8 knockout spots; this folds that into each team's qualified/eliminated
  * status, soundly (never overclaiming).
  *
- * For a team T in group b (not already decided by its group):
- *   - aheadPossible   = # other groups whose 3rd-placed team COULD finish with
- *                       points ≥ T's floor (thirdCeil ≥ T.minPts)
- *   - aheadGuaranteed = # other groups whose 3rd-placed team is GUARANTEED to
- *                       finish with more points than T's ceiling (thirdFloor > T.maxPts)
+ * For a candidate team T in group b, count the other groups whose 3rd-placed
+ * team is ahead of T — separately as *possible* and *guaranteed*:
+ *   - When both T's group and the other group are finished, their figures are
+ *     fixed, so the full FIFA best-third key (pts → GD → GF → fair play, via
+ *     compareThird) decides; a strict win counts as guaranteed+possible, a
+ *     strict loss as neither, an exact dead-heat (drawing of lots) as possible
+ *     only.
+ *   - Otherwise a not-yet-played game leaves goal difference free, so we fall
+ *     back to point bounds: guaranteed-ahead needs strictly more points than
+ *     T can reach; possible-ahead needs at least T's points floor.
  *
  * T clinches a knockout spot (as a third) when it can never finish below 3rd
  * AND at most 7 other thirds could possibly be ahead of it. T is eliminated
  * when it can't reach the top 2 AND at least 8 other thirds are guaranteed
- * ahead of it. Boundary ties (equal points decided by GD) fall on the safe
- * side of both tests, so neither verdict is ever claimed prematurely.
+ * ahead of it. The verdict is never claimed where an unplayed goal margin
+ * could still overturn it.
  *
  * Only meaningful for the 12-group / 8-best-thirds format; skipped otherwise.
  */
-export function applyBestThird(built) {
+export function applyBestThird(built, fpp = {}) {
   if (built.length !== 12) return;
   const QUALIFY = 8; // best thirds that advance
 
+  const keyOf = (team) => ({
+    pts: +team.pts, gd: +team.gd, gf: +team.gf, fpp: fpp[team.team_id] || 0,
+  });
+
   for (const b of built) {
+    const Tcomplete = b.clinch.complete;
+    const Tthird = Tcomplete ? b.sorted[2] : null; // the (only) third of a finished group
+
     for (const id of Object.keys(b.clinch.teams)) {
       const T = b.clinch.teams[id];
-      if (T.qualified || T.eliminated) continue; // already settled by its group
+      if (T.qualified || T.eliminated) continue;          // already settled by its group
+      if (Tcomplete && Tthird?.team_id !== id) continue;  // a finished group's third is its only candidate
+      const Tkey = Tcomplete ? keyOf(Tthird) : null;
 
       let aheadPossible = 0, aheadGuaranteed = 0;
       for (const g of built) {
         if (g === b) continue;
-        if (g.clinch.thirdCeil >= T.minPts) aheadPossible += 1;
-        if (g.clinch.thirdFloor > T.maxPts) aheadGuaranteed += 1;
+
+        if (g.clinch.complete) {
+          const Kg = keyOf(g.sorted[2]);
+          if (Tcomplete) {
+            const cmp = compareThird(Kg, Tkey); // < 0 ⇒ g's third ahead of T
+            if (cmp < 0) { aheadGuaranteed += 1; aheadPossible += 1; }
+            else if (cmp === 0) aheadPossible += 1; // dead heat → drawing of lots
+          } else {
+            // T's GD still free: compare fixed rival points against T's bounds
+            if (Kg.pts > T.maxPts) aheadGuaranteed += 1;
+            if (Kg.pts >= T.minPts) aheadPossible += 1;
+          }
+        } else {
+          // rival's third still has a game to play → goal difference is free
+          if (g.clinch.thirdFloor > T.maxPts) aheadGuaranteed += 1;
+          if (g.clinch.thirdCeil >= T.minPts) aheadPossible += 1;
+        }
       }
 
       if (T.guaranteedTop3 && aheadPossible <= QUALIFY - 1) {
@@ -346,7 +378,7 @@ export function projectStandings(groups, matches) {
   });
 
   // Second pass: cross-group best-third clinch/elimination folds into qualified/eliminated.
-  applyBestThird(built);
+  applyBestThird(built, fpp);
 
   return built.map(({ group, sorted, clinch }) => ({
     ...group,
