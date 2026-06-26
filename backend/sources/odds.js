@@ -73,7 +73,8 @@ export function extractOdds(rawData, currentMatches) {
     const match = currentMatches.find(g =>
       normalize(g.home_team_name_en) === homeNorm &&
       normalize(g.away_team_name_en) === awayNorm &&
-      g.finished === 'FALSE',
+      g.finished === 'FALSE' &&
+      !g.projected,
     );
 
     if (!match) continue;

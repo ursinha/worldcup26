@@ -95,6 +95,7 @@ db.exec(`
     ['h2h_away',        'REAL'],
     ['home_penalty',    'TEXT'],
     ['away_penalty',    'TEXT'],
+    ['projected',       'INTEGER'],  // 1 = team names resolved from standings, not confirmed by source
   ];
   for (const [col, type] of toAdd) {
     if (!cols.includes(col)) {
@@ -141,7 +142,12 @@ const _upsertPrimary = db.prepare(`
     type               = excluded.type,
     home_penalty       = COALESCE(excluded.home_penalty, home_penalty),
     away_penalty       = COALESCE(excluded.away_penalty, away_penalty),
-    primary_updated_at = excluded.primary_updated_at
+    primary_updated_at = excluded.primary_updated_at,
+    -- Clear projected flag when primary source provides real team names
+    projected = CASE
+      WHEN excluded.home_team_name_en IS NOT NULL AND excluded.away_team_name_en IS NOT NULL THEN 0
+      ELSE projected
+    END
 `);
 
 const _upsertEnrichment = db.prepare(`
@@ -182,6 +188,17 @@ const _upsertOdds = db.prepare(`
     h2h_away = COALESCE(excluded.h2h_away, h2h_away)
 `);
 
+const _upsertResolved = db.prepare(`
+  UPDATE matches SET
+    home_team_id      = COALESCE(@home_team_id, home_team_id),
+    away_team_id      = COALESCE(@away_team_id, away_team_id),
+    home_team_name_en = COALESCE(@home_team_name_en, home_team_name_en),
+    away_team_name_en = COALESCE(@away_team_name_en, away_team_name_en),
+    projected         = @projected
+  WHERE id = @id
+    AND (home_team_name_en IS NULL OR away_team_name_en IS NULL)
+`);
+
 const _upsertGroup   = db.prepare('INSERT INTO groups_tbl (name, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertTeam    = db.prepare('INSERT INTO teams (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
 const _upsertStadium = db.prepare('INSERT INTO stadiums (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at');
@@ -190,6 +207,7 @@ export const savePrimary     = db.transaction((rows) => { for (const r of rows) 
 export const saveEnrichment  = db.transaction((rows) => { for (const r of rows) _upsertEnrichment.run(r); });
 export const savePredictions = db.transaction((rows) => { for (const r of rows) _upsertPrediction.run(r); });
 export const saveOdds        = db.transaction((rows) => { for (const r of rows) _upsertOdds.run(r); });
+export const saveResolved    = db.transaction((rows) => { for (const r of rows) _upsertResolved.run(r); });
 export const saveGroups     = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertGroup.run(r.name, JSON.stringify(r), now); });
 export const saveTeams      = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertTeam.run(r.id, JSON.stringify(r), now); });
 export const saveStadiums   = db.transaction((rows) => { const now = Date.now(); for (const r of rows) _upsertStadium.run(r.id, JSON.stringify(r), now); });
@@ -235,6 +253,7 @@ function rowToGame(row) {
     h2h_away:          row.h2h_away      ?? null,
     home_penalty:      row.home_penalty  ?? null,
     away_penalty:      row.away_penalty  ?? null,
+    projected:         row.projected     ?? 0,
   };
 }
 

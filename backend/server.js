@@ -4,7 +4,7 @@ import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions, saveOdds, getMeta, setMeta } from './db.js';
+import { loadMatches, loadGroups, loadTeams, loadStadiums, savePrimary, saveEnrichment, saveGroups, saveTeams, saveStadiums, savePredictions, saveOdds, saveResolved, getMeta, setMeta } from './db.js';
 import { computeAllPredictions } from './predictions.js';
 import * as primary from './sources/primary.js';
 import * as live from './sources/live.js';
@@ -189,6 +189,18 @@ async function pollPrimary() {
     saveGroups(groupsData.groups ?? []);
     refreshCache();
 
+    // Resolve knockout team names from standings/labels
+    const resolvedRows = buildResolvedRows(
+      cache.matches?.games ?? [],
+      cache.groups?.groups ?? [],
+      cache.teams?.teams ?? [],
+    );
+    if (resolvedRows.length) {
+      saveResolved(resolvedRows);
+      refreshCache();
+      console.log(`[${primary.id}] resolved ${resolvedRows.length} knockout slot(s)`);
+    }
+
     const predRows = computeAllPredictions(cache.matches?.games ?? []);
     if (predRows.length) { savePredictions(predRows); refreshCache(); }
 
@@ -275,6 +287,117 @@ function scheduleLive() {
   const interval = live.intervals.live;
   sourceState.live.nextPoll = Date.now() + interval;
   liveTimer = setTimeout(pollLive, interval);
+}
+
+// ---------------------------------------------------------------------------
+// Resolve knockout team names from group standings + bracket labels
+// ---------------------------------------------------------------------------
+
+function sortGroupTeams(teams) {
+  return [...teams].sort((a, b) => {
+    if (+b.pts !== +a.pts) return +b.pts - +a.pts;
+    if (+b.gd  !== +a.gd)  return +b.gd  - +a.gd;
+    return +b.gf - +a.gf;
+  });
+}
+
+/**
+ * Resolve a team slot from its label + group standings.
+ * Returns { id, name } or null.
+ */
+function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0) {
+  if (depth > 5) return null;
+  if (teamId && teamId !== '0') {
+    const t = teamMap[teamId];
+    return t ? { id: teamId, name: t.name_en } : null;
+  }
+  if (!label) return null;
+
+  const wg = label.match(/^Winner Group ([A-L])$/);
+  if (wg) {
+    const group = groupMap[wg[1]];
+    if (!group) return null;
+    const sorted = sortGroupTeams(group.teams);
+    const t = teamMap[sorted[0]?.team_id];
+    return t ? { id: sorted[0].team_id, name: t.name_en } : null;
+  }
+
+  const rug = label.match(/^Runner-up Group ([A-L])$/);
+  if (rug) {
+    const group = groupMap[rug[1]];
+    if (!group) return null;
+    const sorted = sortGroupTeams(group.teams);
+    const t = teamMap[sorted[1]?.team_id];
+    return t ? { id: sorted[1].team_id, name: t.name_en } : null;
+  }
+
+  const wm = label.match(/^Winner Match (\d+)$/);
+  if (wm) {
+    const game = gameMap[wm[1]];
+    if (!game || game.finished !== 'TRUE') return null;
+    let winnerId;
+    if (+game.home_score !== +game.away_score) {
+      winnerId = +game.home_score > +game.away_score ? game.home_team_id : game.away_team_id;
+    } else {
+      winnerId = +game.home_penalty > +game.away_penalty ? game.home_team_id : game.away_team_id;
+    }
+    const t = teamMap[winnerId];
+    return t ? { id: winnerId, name: t.name_en } : null;
+  }
+
+  const lm = label.match(/^Loser Match (\d+)$/);
+  if (lm) {
+    const game = gameMap[lm[1]];
+    if (!game || game.finished !== 'TRUE') return null;
+    let loserId;
+    if (+game.home_score !== +game.away_score) {
+      loserId = +game.home_score < +game.away_score ? game.home_team_id : game.away_team_id;
+    } else {
+      loserId = +game.home_penalty < +game.away_penalty ? game.home_team_id : game.away_team_id;
+    }
+    const t = teamMap[loserId];
+    return t ? { id: loserId, name: t.name_en } : null;
+  }
+
+  return null; // 3rd-place group slots — too complex for now
+}
+
+/**
+ * Find knockout matches missing team names and resolve them from labels +
+ * current standings. Returns rows ready for saveResolved().
+ */
+function buildResolvedRows(games, groups, teams) {
+  if (!groups?.length || !teams?.length) return [];
+
+  const teamMap  = Object.fromEntries(teams.map(t => [String(t.id), t]));
+  const groupMap = Object.fromEntries(groups.map(g => [g.name, g]));
+  const gameMap  = Object.fromEntries(games.map(g => [String(g.id), g]));
+  const rows = [];
+
+  for (const g of games) {
+    if (g.type === 'group') continue;
+    if (g.home_team_name_en && g.away_team_name_en) continue; // already set
+
+    const home = !g.home_team_name_en
+      ? resolveSlot(g.home_team_id, g.home_team_label, gameMap, groupMap, teamMap)
+      : null;
+    const away = !g.away_team_name_en
+      ? resolveSlot(g.away_team_id, g.away_team_label, gameMap, groupMap, teamMap)
+      : null;
+
+    if (!home && !away) continue; // nothing new to resolve
+
+    rows.push({
+      id:                g.id,
+      home_team_id:      home?.id   ?? null,
+      away_team_id:      away?.id   ?? null,
+      home_team_name_en: home?.name ?? null,
+      away_team_name_en: away?.name ?? null,
+      projected:         1,
+    });
+  }
+
+  return rows;
 }
 
 // Odds source — O/U lines from The Odds API
