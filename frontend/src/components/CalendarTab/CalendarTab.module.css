@@ -67,7 +67,6 @@
   border: 1px solid transparent;
   transition: border-color 0.15s;
   overflow: hidden;
-  cursor: pointer;
 }
 
 .cell.hasMatches {
@@ -201,6 +200,7 @@
       color-mix(in srgb, #009739 22%, transparent),
       color-mix(in srgb, #FEDD00 22%, transparent));
   box-shadow: 0 0 0 2px color-mix(in srgb, #FEDD00 55%, transparent);
+  cursor: pointer;
 }
 
 .cell.brazil .dayNum {
