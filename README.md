@@ -45,7 +45,7 @@ npm run dev
 
 ## Polling and rate limiting
 
-The backend uses an adaptive polling schedule: **every 10 seconds while a match is live**, **every 2 hours when idle**. Static data (groups, teams, stadiums) is fetched once at startup. A secondary source syncs live match enrichment data (clock, events) every 15 minutes during live matches.
+The backend uses an adaptive polling schedule: **every 10 seconds while a match is live**, **every 2 hours when idle**. Static data (groups, teams, stadiums) is fetched once at startup. A secondary source (ESPN) syncs live match enrichment data (clock, card/goal events) **every 30 seconds during live matches**, and is idle otherwise.
 
 **Please be mindful of upstream services.** Do not reduce the polling intervals below what is configured or run multiple instances pointing at the same sources.
 
