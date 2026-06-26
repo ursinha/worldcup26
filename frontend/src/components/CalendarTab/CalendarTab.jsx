@@ -105,11 +105,12 @@ export default function CalendarTab() {
             const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const info = matchDays[iso];
             const isToday = iso === today;
+            const isPast = iso < today;
 
             return (
               <div
                 key={iso}
-                className={`${styles.cell} ${info ? styles.hasMatches : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''}`}
+                className={`${styles.cell} ${info ? styles.hasMatches : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
               >
                 <span className={styles.dayNum}>{day}</span>
                 {info && (
