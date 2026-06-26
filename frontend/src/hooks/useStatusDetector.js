@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePolling } from './usePolling';
 import { projectStandings } from '../utils/projectedStandings';
 import { rankThirdPlaceTeams } from '../utils/thirdPlace';
+import { teamNamePt } from '../utils/i18n';
 
 const TOAST_DURATION = 9_000;
 let toastId = 0;
@@ -57,7 +58,7 @@ export function useStatusDetector() {
   }, [toasts, dismiss]);
 
   const teamName = useCallback((id) => {
-    return teamsData?.teams?.find((x) => x.id === id)?.name_en ?? `ID ${id}`;
+    return teamNamePt(teamsData?.teams?.find((x) => x.id === id)?.name_en) ?? `ID ${id}`;
   }, [teamsData]);
 
   // Diff statuses on each poll

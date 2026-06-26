@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePolling } from './usePolling';
+import { teamNamePt } from '../utils/i18n';
 
 const TOAST_DURATION = 8_000;
 const TITLE_FLASH_INTERVAL = 2_000;
@@ -78,8 +79,8 @@ export function useGoalDetector() {
       currentScores[game.id] = {
         home: +game.home_score || 0,
         away: +game.away_score || 0,
-        homeName: game.home_team_name_en,
-        awayName: game.away_team_name_en,
+        homeName: teamNamePt(game.home_team_name_en),
+        awayName: teamNamePt(game.away_team_name_en),
         homeScorers: game.home_scorers ?? '',
         awayScorers: game.away_scorers ?? '',
       };

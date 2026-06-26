@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { usePolling } from '../../hooks/usePolling';
+import { teamNamePt, matchLabelPt } from '../../utils/i18n';
 import { gameToUTC, formatBRT, todayBRT } from '../../utils/time';
 import styles from './CalendarTab.module.css';
 
@@ -115,8 +116,8 @@ export default function CalendarTab() {
       if (brazilHome || brazilAway) {
         days[isoDate].hasBrazil = true;
         const opponent = brazilHome
-          ? (game.away_team_name_en ?? game.away_team_label ?? 'A definir')
-          : (game.home_team_name_en ?? game.home_team_label ?? 'A definir');
+          ? (teamNamePt(game.away_team_name_en) ?? matchLabelPt(game.away_team_label) ?? 'A definir')
+          : (teamNamePt(game.home_team_name_en) ?? matchLabelPt(game.home_team_label) ?? 'A definir');
         days[isoDate].brazilMatch = {
           opponent,
           time: formatBRT(utc).time,

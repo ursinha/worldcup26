@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gameToUTC, formatBRT } from '../../utils/time';
 import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
 import { resolveSlot } from '../../utils/bracket';
+import { teamNamePt, matchLabelPt } from '../../utils/i18n';
 import styles from './MatchCard.module.css';
 
 function useMatchClock(game, isLive) {
@@ -55,8 +56,8 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
 
   const homeProjected = homeResolved?.projected && !!homeResolved?.team;
   const awayProjected = awayResolved?.projected && !!awayResolved?.team;
-  const homeName = game.home_team_name_en ?? homeResolved?.team?.name_en ?? game.home_team_label ?? '?';
-  const awayName = game.away_team_name_en ?? awayResolved?.team?.name_en ?? game.away_team_label ?? '?';
+  const homeName = teamNamePt(game.home_team_name_en) ?? teamNamePt(homeResolved?.team?.name_en) ?? matchLabelPt(game.home_team_label) ?? '?';
+  const awayName = teamNamePt(game.away_team_name_en) ?? teamNamePt(awayResolved?.team?.name_en) ?? matchLabelPt(game.away_team_label) ?? '?';
   const homeFlag = homeTeam?.flag ?? homeResolved?.team?.flag;
   const awayFlag = awayTeam?.flag ?? awayResolved?.team?.flag;
   const stadium  = stadiumMap[game.stadium_id];

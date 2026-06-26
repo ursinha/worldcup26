@@ -1,4 +1,5 @@
 import { shortLabel } from '../../utils/bracket';
+import { teamNamePt } from '../../utils/i18n';
 import { gameToUTC, formatBRT } from '../../utils/time';
 import styles from './BracketSlot.module.css';
 
@@ -61,7 +62,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
             )}
           </>
         ) : (
-          <span className={styles.tbd}>TBD</span>
+          <span className={styles.tbd}>A definir</span>
         )}
       </div>
     </div>
@@ -74,14 +75,14 @@ function TeamRow({ resolved, label, score, penalty, isWinner, isLive, showGroup 
   return (
     <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${!team ? styles.unknown : ''} ${team && !projected ? styles.confirmed : ''}`}>
       {team?.flag ? (
-        <img className={styles.flag} src={team.flag} alt={team.name_en} loading="lazy" />
+        <img className={styles.flag} src={team.flag} alt={teamNamePt(team.name_en)} loading="lazy" />
       ) : (
         <span className={styles.flagPlaceholder} />
       )}
       <span
         className={`${styles.teamName} ${isWinner ? styles.winner : ''} ${projected ? styles.projected : ''}`}
       >
-        {team?.name_en ?? shortLabel(label)}
+        {teamNamePt(team?.name_en) ?? shortLabel(label)}
         {projected && team && <span className={styles.projBadge}> proj</span>}
       </span>
       {showGroup && group && <span className={styles.groupBadge}>{group}</span>}

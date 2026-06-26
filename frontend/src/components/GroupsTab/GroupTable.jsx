@@ -1,3 +1,4 @@
+import { teamNamePt } from '../../utils/i18n';
 import styles from './GroupTable.module.css';
 
 const COLS = [
@@ -69,9 +70,9 @@ export default function GroupTable({ group, teamMap, projectedThirdIds, hasLive 
                 </td>
                 <td className={`${styles.teamCell} ${borderClass}`} title={statusTitle || undefined}>
                   {team?.flag && (
-                    <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
+                    <img className={styles.flag} src={team.flag} alt={teamNamePt(team?.name_en)} loading="lazy" />
                   )}
-                  <span className={styles.teamName}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
+                  <span className={styles.teamName}>{teamNamePt(team?.name_en) ?? `ID ${entry.team_id}`}</span>
                   {isLive && <span className={styles.liveDot} />}
                 </td>
                 {COLS.map((c) => (

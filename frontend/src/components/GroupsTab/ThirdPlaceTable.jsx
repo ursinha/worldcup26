@@ -1,3 +1,4 @@
+import { teamNamePt } from '../../utils/i18n';
 import styles from './GroupTable.module.css';
 import tpStyles from './ThirdPlaceTable.module.css';
 
@@ -43,9 +44,9 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap, hasLive = false
                 <td className={`${styles.teamCell} ${entry.qualifying ? styles.qualBorder : styles.elimBorder}`}>
                   <span className={tpStyles.groupBadge}>{entry.group}</span>
                   {team?.flag && (
-                    <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
+                    <img className={styles.flag} src={team.flag} alt={teamNamePt(team?.name_en)} loading="lazy" />
                   )}
-                  <span className={`${styles.teamName} ${tpStyles.teamNameTp}`}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
+                  <span className={`${styles.teamName} ${tpStyles.teamNameTp}`}>{teamNamePt(team?.name_en) ?? `ID ${entry.team_id}`}</span>
                   {entry.qualified && <span className={`${styles.statusBadge} ${styles.badgeQual}`} title="Classificada (melhor 3º lugar)">✓</span>}
                   {entry.eliminated && <span className={`${styles.statusBadge} ${styles.badgeElim}`} title="Eliminada">✗</span>}
                   {hasLive && !entry.qualified && !entry.eliminated && (
