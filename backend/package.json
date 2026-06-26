@@ -2,6 +2,8 @@
   "name": "worldcup-backend",
   "version": "1.0.0",
   "type": "module",
+  "author": "Ursula Junque (ursinha) <ursinha@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js"

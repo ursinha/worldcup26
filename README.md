@@ -88,3 +88,9 @@ worldcup/
                 └── GroupTable.jsx  # Standings table
 ```
 # 2026 FIFA World Cup tracker
+
+---
+
+## License
+
+MIT © 2026 Ursula Junque (ursinha). See [LICENSE](LICENSE).
