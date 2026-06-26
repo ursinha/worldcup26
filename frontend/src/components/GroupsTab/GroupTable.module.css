@@ -64,6 +64,9 @@
 .teamName {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table th.stat {
@@ -134,29 +137,18 @@
   background: color-mix(in srgb, var(--red) 9%, transparent);
 }
 
-.projTag {
-  flex-shrink: 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  padding: 0.15rem 0.3rem;
-  border-radius: 4px;
-  border: 1px dashed currentColor;
-  opacity: 0.85;
-}
-.projTagIn  { color: var(--accent); }
-.projTagOut { color: var(--red); }
-
+/* Compact status chip: filled = confirmed (math-locked), dashed = live projection */
 .statusBadge {
   flex-shrink: 0;
+  box-sizing: border-box;
+  min-width: 1.15rem;
+  text-align: center;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.62rem;
+  font-weight: 800;
   line-height: 1;
-  padding: 0.15rem 0.3rem;
+  padding: 0.15rem 0.25rem;
+  border: 1px solid transparent;
   border-radius: 4px;
   letter-spacing: 0.02em;
 }
@@ -169,6 +161,24 @@
 .badgeElim {
   color: var(--red);
   background: color-mix(in srgb, var(--red) 15%, transparent);
+}
+
+.badgeWinner {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+/* Live-projected: outlined (tentative) rather than filled */
+.badgeProjIn {
+  color: var(--accent);
+  background: transparent;
+  border: 1px dashed var(--accent);
+}
+
+.badgeProjOut {
+  color: var(--red);
+  background: transparent;
+  border: 1px dashed var(--red);
 }
 
 .liveDot {

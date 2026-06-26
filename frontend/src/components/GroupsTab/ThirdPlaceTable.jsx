@@ -50,10 +50,10 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap, hasLive = false
                   {entry.eliminated && <span className={`${styles.statusBadge} ${styles.badgeElim}`} title="Eliminada">✗</span>}
                   {hasLive && !entry.qualified && !entry.eliminated && (
                     <span
-                      className={`${styles.projTag} ${entry.qualifying ? styles.projTagIn : styles.projTagOut}`}
+                      className={`${styles.statusBadge} ${entry.qualifying ? styles.badgeProjIn : styles.badgeProjOut}`}
                       title={entry.qualifying ? 'Classificação projetada (resultado ao vivo)' : 'Eliminação projetada (resultado ao vivo)'}
                     >
-                      projetado
+                      {entry.qualifying ? '✓' : '✗'}
                     </span>
                   )}
                   {entry.isLive && <span className={tpStyles.liveDot} />}
