@@ -7,6 +7,7 @@ import StatusBar from './components/StatusBar';
 import Footer from './components/Footer';
 import GoalToast from './components/GoalToast';
 import StatusToast from './components/StatusToast';
+import toastStyles from './components/GoalToast.module.css';
 import MatchesTab from './components/MatchesTab/MatchesTab';
 import GroupsTab from './components/GroupsTab/GroupsTab';
 import BracketTab from './components/BracketTab/BracketTab';
@@ -99,8 +100,10 @@ export default function App() {
         <div style={{ display: activeTab === 'calendar' ? undefined : 'none' }}><CalendarTab /></div>
       </div>
       <Footer />
-      <GoalToast goals={goals} onDismiss={dismiss} />
-      <StatusToast toasts={statusToasts} onDismiss={dismissStatus} />
+      <div className={toastStyles.container}>
+        <GoalToast goals={goals} onDismiss={dismiss} />
+        <StatusToast toasts={statusToasts} onDismiss={dismissStatus} />
+      </div>
     </div>
   );
 }

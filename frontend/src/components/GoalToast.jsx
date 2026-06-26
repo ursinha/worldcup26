@@ -2,15 +2,11 @@ import { useState, useEffect } from 'react';
 import styles from './GoalToast.module.css';
 
 export default function GoalToast({ goals, onDismiss }) {
-  if (goals.length === 0) return null;
-
-  return (
-    <div className={styles.container}>
-      {goals.map((goal) => (
-        <ToastItem key={goal.id} goal={goal} onDismiss={onDismiss} />
-      ))}
-    </div>
-  );
+  // Items only — the fixed container is provided by App so goal and status
+  // toasts share one stack.
+  return goals.map((goal) => (
+    <ToastItem key={goal.id} goal={goal} onDismiss={onDismiss} />
+  ));
 }
 
 function ToastItem({ goal, onDismiss }) {

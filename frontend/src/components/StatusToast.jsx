@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
-import styles from './StatusToast.module.css';
+import styles from './GoalToast.module.css';
 
 const KINDS = {
-  winner:     { icon: '🏆', label: 'Classificada em 1º',     tone: 'in',      body: (t, g) => `${t} venceu o Grupo ${g}` },
-  qualified:  { icon: '✓',  label: 'Classificada',           tone: 'in',      body: (t) => `${t} garantiu vaga nas oitavas` },
-  eliminated: { icon: '✗',  label: 'Eliminada',              tone: 'out',     body: (t) => `${t} está fora` },
-  'proj-in':  { icon: '↗',  label: 'Classificação projetada', tone: 'projin',  body: (t) => `${t} se classificaria agora (ao vivo)` },
-  'proj-out': { icon: '↘',  label: 'Eliminação projetada',    tone: 'projout', body: (t) => `${t} estaria fora agora (ao vivo)` },
+  winner:     { icon: '🏆', label: 'Classificada em 1º',      body: (t, g) => `${t} venceu o Grupo ${g}` },
+  qualified:  { icon: '✓',  label: 'Classificada',            body: (t) => `${t} garantiu vaga nas oitavas` },
+  eliminated: { icon: '✗',  label: 'Eliminada',               body: (t) => `${t} está fora` },
+  'proj-in':  { icon: '↗',  label: 'Classificação projetada', body: (t) => `${t} se classificaria agora (ao vivo)` },
+  'proj-out': { icon: '↘',  label: 'Eliminação projetada',    body: (t) => `${t} estaria fora agora (ao vivo)` },
 };
 
 export default function StatusToast({ toasts, onDismiss }) {
-  if (!toasts.length) return null;
-  return (
-    <div className={styles.container}>
-      {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
-      ))}
-    </div>
-  );
+  // Items only — App provides the shared fixed container.
+  return toasts.map((t) => (
+    <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
+  ));
 }
 
 function ToastItem({ toast, onDismiss }) {
@@ -28,17 +24,21 @@ function ToastItem({ toast, onDismiss }) {
   }, []);
 
   const k = KINDS[toast.kind] ?? KINDS.qualified;
+  const isOut = toast.kind === 'eliminated' || toast.kind === 'proj-out';
+  const isProjected = toast.kind === 'proj-in' || toast.kind === 'proj-out';
+  const color = isOut ? 'var(--red)' : 'var(--accent)';
 
   return (
     <div
-      className={`${styles.toast} ${styles[k.tone]} ${exiting ? styles.exiting : ''}`}
+      className={`${styles.toast} ${exiting ? styles.exiting : ''}`}
+      style={{ borderColor: color, borderLeftStyle: isProjected ? 'dashed' : 'solid' }}
       onClick={() => onDismiss(toast.id)}
     >
       <div className={styles.header}>
-        <span className={styles.icon}>{k.icon}</span>
-        <span className={styles.label}>{k.label}</span>
+        <span className={styles.goalIcon}>{k.icon}</span>
+        <span className={styles.goalLabel} style={{ color }}>{k.label}</span>
       </div>
-      <div className={styles.body}>{k.body(toast.team, toast.group)}</div>
+      <div className={styles.team}>{k.body(toast.team, toast.group)}</div>
     </div>
   );
 }
