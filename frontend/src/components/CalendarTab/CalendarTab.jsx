@@ -4,46 +4,46 @@ import { gameToUTC, formatBRT, todayBRT } from '../../utils/time';
 import styles from './CalendarTab.module.css';
 
 const PHASE_LABELS = {
-  group:          'GRUPOS',
-  round_of_32:    'R32',
-  round_of_16:    'OITAVAS',
-  quarter_finals: 'QUARTAS',
-  semi_finals:    'SEMI',
-  third_place:    '3º LUGAR',
-  final:          'FINAL',
+  group:  'GRUPOS',
+  r32:    'R32',
+  r16:    'OITAVAS',
+  qf:     'QUARTAS',
+  sf:     'SEMI',
+  third:  '3º LUGAR',
+  final:  'FINAL',
 };
 
 // Progressive importance: group < R32 < R16 < QF < SF < 3rd/final
 const PHASE_STYLE = {
-  group:          'phaseGroup',
-  round_of_32:    'phaseR32',
-  round_of_16:    'phaseR16',
-  quarter_finals: 'phaseQF',
-  semi_finals:    'phaseSF',
-  third_place:    'phaseFinal',
-  final:          'phaseFinal',
+  group:  'phaseGroup',
+  r32:    'phaseR32',
+  r16:    'phaseR16',
+  qf:     'phaseQF',
+  sf:     'phaseSF',
+  third:  'phaseFinal',
+  final:  'phaseFinal',
 };
 
 // Importance rank — higher = closer to final
 const PHASE_RANK = {
-  group:          0,
-  round_of_32:    1,
-  round_of_16:    2,
-  quarter_finals: 3,
-  semi_finals:    4,
-  third_place:    5,
-  final:          6,
+  group:  0,
+  r32:    1,
+  r16:    2,
+  qf:     3,
+  sf:     4,
+  third:  5,
+  final:  6,
 };
 
 // Cell background style keyed by highest phase
 const CELL_PHASE_STYLE = {
-  group:          'cellGroup',
-  round_of_32:    'cellR32',
-  round_of_16:    'cellR16',
-  quarter_finals: 'cellQF',
-  semi_finals:    'cellSF',
-  third_place:    'cellFinal',
-  final:          'cellFinal',
+  group:  'cellGroup',
+  r32:    'cellR32',
+  r16:    'cellR16',
+  qf:     'cellQF',
+  sf:     'cellSF',
+  third:  'cellFinal',
+  final:  'cellFinal',
 };
 
 const BRAZIL_NAME = 'Brazil';

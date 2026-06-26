@@ -27,11 +27,11 @@ export function stageLabel(game) {
     return `Grupo ${game.group} · MD${game.matchday}`;
   }
   const labels = {
-    round_of_32: 'Oitavas de Final (R32)',
-    round_of_16: 'Oitavas de Final',
-    quarter_finals: 'Quartas de Final',
-    semi_finals: 'Semifinal',
-    third_place: 'Disputa de 3º Lugar',
+    r32: 'Oitavas de Final (R32)',
+    r16: 'Oitavas de Final',
+    qf: 'Quartas de Final',
+    sf: 'Semifinal',
+    third: 'Disputa de 3º Lugar',
     final: 'Final',
   };
   return labels[game.type] ?? game.type ?? '—';

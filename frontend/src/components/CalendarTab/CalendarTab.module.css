@@ -69,8 +69,7 @@
 }
 
 .cell.hasMatches {
-  background: var(--surface-hi);
-  border-color: var(--border);
+  /* background and border set by cell phase classes (cellGroup, cellR32, etc.) */
 }
 
 .cell.today {
