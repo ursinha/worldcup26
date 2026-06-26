@@ -25,7 +25,7 @@ export default function Footer() {
         Feito por <a href="https://github.com/ursinha" target="_blank" rel="noopener noreferrer" className={styles.authorLink}>@ursinha</a>
       </span>
       <span className={styles.separator}>·</span>
-      <span>a Copa do Mundo é maravilhosa&#8482;</span>
+      <span>A Copa do Mundo é maravilhosa&#8482;</span>
       <span className={styles.separator}>·</span>
       <span>commit</span>
       <span className={styles.commit}>{commit}</span>
