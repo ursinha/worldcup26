@@ -14,7 +14,7 @@ export function parseScorers(raw) {
  * Returns: 'finished' | 'live' | 'notstarted'
  */
 export function matchStatus(game) {
-  if (game.finished === 'TRUE') return 'finished';
+  if (game.finished === 'TRUE' || game.period === 'FT') return 'finished';
   if (game.time_elapsed === 'notstarted') return 'notstarted';
   return 'live';
 }
