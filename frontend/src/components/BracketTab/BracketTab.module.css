@@ -62,11 +62,24 @@
   border-left-color: var(--half-lower);
 }
 
-/* Final section between the two halves */
+/* Layout: halves stacked left, final to the right */
+.bracketLayout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1.5rem;
+  min-width: max-content;
+}
+
+.halvesCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .finalSection {
   display: flex;
-  justify-content: flex-end;
-  padding: 1.25rem 1.25rem 1.25rem 0;
+  align-items: center;
   min-width: max-content;
 }
 

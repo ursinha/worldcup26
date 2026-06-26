@@ -153,23 +153,26 @@ export default function BracketTab() {
 
   return (
     <div className={styles.outer}>
-      {renderHalf(UPPER_ROUNDS, styles.upperHalf)}
+      <div className={styles.bracketLayout}>
+        <div className={styles.halvesCol}>
+          {renderHalf(UPPER_ROUNDS, styles.upperHalf)}
+          {renderHalf(LOWER_ROUNDS, styles.lowerHalf)}
+        </div>
 
-      <div className={styles.finalSection}>
-        <div className={styles.roundCol}>
-          <div className={styles.roundLabel}>{FINAL_ROUND.label}</div>
-          <BracketSlot
-            game={finalGame ?? null}
-            homeResolved={finalHome}
-            awayResolved={finalAway}
-            slotHeight={finalSlotH}
-            hasConnector={false}
-            showGroup={false}
-          />
+        <div className={styles.finalSection}>
+          <div className={styles.roundCol}>
+            <div className={styles.roundLabel}>{FINAL_ROUND.label}</div>
+            <BracketSlot
+              game={finalGame ?? null}
+              homeResolved={finalHome}
+              awayResolved={finalAway}
+              slotHeight={finalSlotH}
+              hasConnector={false}
+              showGroup={false}
+            />
+          </div>
         </div>
       </div>
-
-      {renderHalf(LOWER_ROUNDS, styles.lowerHalf)}
 
       {/* Third-place match */}
       {thirdGame && (
