@@ -1,0 +1,160 @@
+.container {
+  padding: 1.5rem 1.25rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-3);
+  padding: 4rem 0;
+}
+
+.months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 700px) {
+  .months {
+    grid-template-columns: 1fr;
+  }
+}
+
+.month {
+  min-width: 0;
+}
+
+.monthTitle {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 0.75rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0;
+}
+
+.emptyCell {
+  aspect-ratio: 1;
+}
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.25rem 0.15rem;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+  overflow: hidden;
+}
+
+.cell.hasMatches {
+  background: var(--surface-hi);
+  border-color: var(--border);
+}
+
+.cell.today {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold-dim);
+}
+
+.dayNum {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+  line-height: 1;
+}
+
+.hasMatches .dayNum {
+  color: var(--text-1);
+}
+
+.badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0 3px;
+  border-radius: 2px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.matchCount {
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.matchCount::before {
+  content: '×';
+}
+
+/* Phase color variants */
+.phaseGroup {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.phaseKnockout {
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.phaseGold {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.phaseFinal {
+  color: var(--gold);
+  background: var(--gold-dim);
+  font-weight: 800;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+}

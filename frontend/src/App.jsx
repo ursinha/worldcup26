@@ -8,12 +8,14 @@ import GoalToast from './components/GoalToast';
 import MatchesTab from './components/MatchesTab/MatchesTab';
 import GroupsTab from './components/GroupsTab/GroupsTab';
 import BracketTab from './components/BracketTab/BracketTab';
+import CalendarTab from './components/CalendarTab/CalendarTab';
 import styles from './App.module.css';
 
 const TABS = [
   { key: 'matches', label: 'Partidas', shortcut: '1' },
   { key: 'groups', label: 'Grupos', shortcut: '2' },
   { key: 'bracket', label: 'Chaveamento', shortcut: '3' },
+  { key: 'calendar', label: 'Calendário', shortcut: '4' },
 ];
 
 function SunIcon() {
@@ -56,7 +58,7 @@ export default function App() {
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      const TAB_KEYS = { '1': 'matches', '2': 'groups', '3': 'bracket' };
+      const TAB_KEYS = { '1': 'matches', '2': 'groups', '3': 'bracket', '4': 'calendar' };
       if (TAB_KEYS[e.key]) handleTabChange(TAB_KEYS[e.key]);
       if (e.key === 't' || e.key === 'T') toggle();
     }
@@ -91,6 +93,7 @@ export default function App() {
         <div style={{ display: activeTab === 'matches' ? undefined : 'none' }}><MatchesTab /></div>
         <div style={{ display: activeTab === 'groups' ? undefined : 'none' }}><GroupsTab /></div>
         <div style={{ display: activeTab === 'bracket' ? undefined : 'none' }}><BracketTab /></div>
+        <div style={{ display: activeTab === 'calendar' ? undefined : 'none' }}><CalendarTab /></div>
       </div>
       <Footer />
       <GoalToast goals={goals} onDismiss={dismiss} />
