@@ -37,6 +37,23 @@
   border-bottom-color: var(--accent);
 }
 
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 /* Push the toggle to the far right */
 .themeToggle {
   margin-left: auto;

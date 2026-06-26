@@ -11,9 +11,9 @@ import BracketTab from './components/BracketTab/BracketTab';
 import styles from './App.module.css';
 
 const TABS = [
-  { key: 'matches', label: 'Partidas' },
-  { key: 'groups', label: 'Grupos' },
-  { key: 'bracket', label: 'Chaveamento' },
+  { key: 'matches', label: 'Partidas', shortcut: '1' },
+  { key: 'groups', label: 'Grupos', shortcut: '2' },
+  { key: 'bracket', label: 'Chaveamento', shortcut: '3' },
 ];
 
 function SunIcon() {
@@ -68,13 +68,14 @@ export default function App() {
     <div className={styles.app}>
       <StatusBar />
       <div className={styles.tabRow}>
-        {TABS.map(({ key, label }) => (
+        {TABS.map(({ key, label, shortcut }) => (
           <button
             key={key}
             className={`${styles.tab} ${activeTab === key ? styles.active : ''}`}
             onClick={() => handleTabChange(key)}
           >
             {label}
+            <span className={styles.shortcut}>{shortcut}</span>
           </button>
         ))}
 
