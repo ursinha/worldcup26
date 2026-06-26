@@ -71,6 +71,16 @@ export const THIRD_PLACE_ID = '103';
 // ---------------------------------------------------------------------------
 
 /**
+ * A group's winner slot is settled once the group has finished OR the leader
+ * has mathematically clinched first place (computed by projectStandings), even
+ * with a matchday still to play. A runner-up slot only settles when the group
+ * is fully played, since the specific team in 2nd can still change.
+ */
+function groupWinnerConfirmed(group) {
+  return isGroupComplete(group?.teams) || !!group?.teams?.[0]?.clinchedWinner;
+}
+
+/**
  * The upstream feed sometimes pre-fills a slot's team id before its source is
  * actually decided (e.g. it guesses the current group runner-up). When a slot
  * still carries a group/match label, the id is only trustworthy once that
@@ -80,8 +90,11 @@ export const THIRD_PLACE_ID = '103';
 function isSlotSourceUnresolved(label, gameMap, groupMap) {
   if (!label) return false;
 
-  const wg = label.match(/^Winner Group ([A-L])$/) || label.match(/^Runner-up Group ([A-L])$/);
-  if (wg) return !isGroupComplete(groupMap[wg[1]]?.teams);
+  const wg = label.match(/^Winner Group ([A-L])$/);
+  if (wg) return !groupWinnerConfirmed(groupMap[wg[1]]);
+
+  const rug = label.match(/^Runner-up Group ([A-L])$/);
+  if (rug) return !isGroupComplete(groupMap[rug[1]]?.teams);
 
   if (/^3rd Group /.test(label)) {
     const groups = Object.values(groupMap);
@@ -123,8 +136,7 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
   if (wg) {
     const group = groupMap[wg[1]];
     if (!group) return { team: null, projected: false, group: wg[1] };
-    const groupComplete = isGroupComplete(group.teams);
-    return { team: teamMap[group.teams[0]?.team_id] ?? null, projected: !groupComplete, group: wg[1] };
+    return { team: teamMap[group.teams[0]?.team_id] ?? null, projected: !groupWinnerConfirmed(group), group: wg[1] };
   }
 
   // "Runner-up Group X"

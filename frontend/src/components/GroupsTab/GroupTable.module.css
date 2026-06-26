@@ -126,6 +126,27 @@
   font-style: italic;
 }
 
+.statusBadge {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.badgeQual {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.badgeElim {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 15%, transparent);
+}
+
 .liveDot {
   display: inline-block;
   width: 6px;

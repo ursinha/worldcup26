@@ -81,6 +81,91 @@ export function isGroupComplete(teams) {
 }
 
 /**
+ * Mathematical clinch / elimination for a single group, computed from match
+ * results only — independent of the upstream feed's projections.
+ *
+ * Brute-forces every combination of the group's remaining results (a 4-team
+ * group has at most 6 matches, so ≤ 3^6 = 729 cases) and tracks, for each
+ * team, the worst and best number of rivals that can finish ahead of it.
+ * Ties are handled conservatively (resolved *against* the team when checking a
+ * clinch, *for* the team when checking elimination) so we never claim a result
+ * the goal-difference tiebreaker could still overturn.
+ *
+ * Returns per team:
+ *   - clinchedWinner : guaranteed to finish 1st (group winner) regardless of remaining results
+ *   - qualified      : guaranteed a top-2 finish → guaranteed to advance
+ *   - eliminated     : cannot finish in the top 3 → no path to the knockouts
+ *                      (only 3rd-placed teams can grab a best-third spot, so a
+ *                      team stuck in last is mathematically out)
+ *
+ * Boundaries kept deliberately truthful/conservative: it does not claim
+ * advancement via a clinched best-third spot, nor eliminate a 3rd-placed team
+ * whose best-third fate depends on other groups — those stay "in contention".
+ */
+export function computeClinch(sortedTeams, groupMatches) {
+  const ids = sortedTeams.map((t) => t.team_id);
+  const matches = groupMatches ?? [];
+  const pending = matches.filter((m) => matchStatus(m) !== 'finished');
+
+  // Group already decided — positions are final, use the real standings order
+  if (pending.length === 0) {
+    const last = sortedTeams.length - 1;
+    return Object.fromEntries(sortedTeams.map((t, i) => [t.team_id, {
+      clinchedWinner: i === 0,
+      qualified: i <= 1,
+      eliminated: i === last,
+    }]));
+  }
+
+  // Base points from finished matches only
+  const basePts = Object.fromEntries(ids.map((id) => [id, 0]));
+  for (const m of matches) {
+    if (matchStatus(m) !== 'finished') continue;
+    const hs = +m.home_score || 0;
+    const as = +m.away_score || 0;
+    if (basePts[m.home_team_id] === undefined || basePts[m.away_team_id] === undefined) continue;
+    if (hs > as) basePts[m.home_team_id] += 3;
+    else if (hs < as) basePts[m.away_team_id] += 3;
+    else { basePts[m.home_team_id] += 1; basePts[m.away_team_id] += 1; }
+  }
+
+  const combos = 3 ** pending.length;
+  if (combos > 6561) { // safety valve; never expected for a 4-team group
+    return Object.fromEntries(ids.map((id) => [id, { clinchedWinner: false, qualified: false, eliminated: false }]));
+  }
+
+  const maxGeq = Object.fromEntries(ids.map((id) => [id, 0]));        // most rivals finishing ≥ this team
+  const minGreater = Object.fromEntries(ids.map((id) => [id, Infinity])); // fewest rivals finishing strictly ahead
+
+  for (let c = 0; c < combos; c++) {
+    const pts = { ...basePts };
+    let x = c;
+    for (const m of pending) {
+      const r = x % 3; x = (x - r) / 3;
+      if (r === 0) pts[m.home_team_id] += 3;
+      else if (r === 1) { pts[m.home_team_id] += 1; pts[m.away_team_id] += 1; }
+      else pts[m.away_team_id] += 3;
+    }
+    for (const id of ids) {
+      let greater = 0, geq = 0;
+      for (const other of ids) {
+        if (other === id) continue;
+        if (pts[other] > pts[id]) { greater++; geq++; }
+        else if (pts[other] === pts[id]) geq++;
+      }
+      if (geq > maxGeq[id]) maxGeq[id] = geq;
+      if (greater < minGreater[id]) minGreater[id] = greater;
+    }
+  }
+
+  return Object.fromEntries(ids.map((id) => [id, {
+    clinchedWinner: maxGeq[id] === 0,
+    qualified: maxGeq[id] <= 1,
+    eliminated: minGreater[id] >= 3,
+  }]));
+}
+
+/**
  * Compute group standings entirely from match results.
  *
  * Finished matches are the source of truth. Live matches are projected
@@ -171,10 +256,17 @@ export function projectStandings(groups, matches) {
   }
 
   const fpp = computeFairPlayPoints(matches);
+  const allMatches = matches ?? [];
 
   // Build result groups with fully-sorted standings (overall + head-to-head)
-  return groups.map((group) => ({
-    ...group,
-    teams: sortStandings(Object.values(standingsMap[group.name]), matchRecords, fpp),
-  }));
+  // and attach the mathematical clinch/elimination status to each team.
+  return groups.map((group) => {
+    const sorted = sortStandings(Object.values(standingsMap[group.name]), matchRecords, fpp);
+    const groupMatches = allMatches.filter((m) => m.type === 'group' && m.group === group.name);
+    const clinch = computeClinch(sorted, groupMatches);
+    return {
+      ...group,
+      teams: sorted.map((t) => ({ ...t, ...clinch[t.team_id] })),
+    };
+  });
 }

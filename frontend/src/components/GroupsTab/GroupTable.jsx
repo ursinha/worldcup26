@@ -1,4 +1,3 @@
-import { isGroupComplete } from '../../utils/projectedStandings';
 import styles from './GroupTable.module.css';
 
 const COLS = [
@@ -34,31 +33,32 @@ export default function GroupTable({ group, teamMap }) {
           </tr>
         </thead>
         <tbody>
-          {(() => {
-            const groupDone = isGroupComplete(sortedTeams);
-            const thirdPts  = +(sortedTeams[2]?.pts ?? 0);
-            return sortedTeams.map((entry, idx) => {
+          {sortedTeams.map((entry, idx) => {
             const team = teamMap[entry.team_id];
-            const isQualified = idx < 2;
-            const maxPts = +entry.pts + Math.max(0, 3 - (+entry.mp || 0)) * 3;
-            // Eliminated when group is fully played (groupDone covers ties on pts/GD)
-            // or when they mathematically can't reach 3rd's current points
-            const isEliminated = idx === 3 && (groupDone || maxPts < thirdPts);
+            const isLeading = idx < 2;          // current top-2 (provisional tint)
+            const isEliminated = !!entry.eliminated; // mathematically out
             const isLive = !!entry.isLive;
+
+            // Affirmative, math-backed status (independent of the upstream feed)
+            let badge = null;
+            if (entry.clinchedWinner) badge = { cls: styles.badgeQual, text: '1º ✓', title: 'Classificada em 1º lugar' };
+            else if (entry.qualified) badge = { cls: styles.badgeQual, text: '✓', title: 'Classificada' };
+            else if (isEliminated)    badge = { cls: styles.badgeElim, text: '✗', title: 'Eliminada' };
 
             return (
               <tr
                 key={entry.team_id}
-                className={`${isQualified ? styles.qualified : isEliminated ? styles.eliminated : ''} ${isLive ? styles.liveRow : ''}`}
+                className={`${isLeading ? styles.qualified : isEliminated ? styles.eliminated : ''} ${isLive ? styles.liveRow : ''}`}
               >
                 <td style={{ padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
                   <span className={styles.pos}>{idx + 1}</span>
                 </td>
-                <td className={`${styles.teamCell} ${isQualified ? styles.qualBorder : isEliminated ? styles.elimBorder : ''}`}>
+                <td className={`${styles.teamCell} ${isLeading ? styles.qualBorder : isEliminated ? styles.elimBorder : ''}`}>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}
                   <span className={styles.teamName}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
+                  {badge && <span className={`${styles.statusBadge} ${badge.cls}`} title={badge.title}>{badge.text}</span>}
                   {isLive && <span className={styles.liveDot} />}
                 </td>
                 {COLS.map((c) => (
@@ -68,8 +68,7 @@ export default function GroupTable({ group, teamMap }) {
                 ))}
               </tr>
             );
-            });
-          })()}
+          })}
         </tbody>
       </table>
     </div>
