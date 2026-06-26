@@ -266,7 +266,12 @@ async function backfillEvents() {
 
 function scheduleLive() {
   clearTimeout(liveTimer);
-  if (!hasLiveMatch()) return;
+  if (!hasLiveMatch()) {
+    sourceState.live.nextPoll = null;
+    sourceState.live.lastFetch = null;
+    sourceState.live.lastCount = null;
+    return;
+  }
   const interval = live.intervals.live;
   sourceState.live.nextPoll = Date.now() + interval;
   liveTimer = setTimeout(pollLive, interval);
