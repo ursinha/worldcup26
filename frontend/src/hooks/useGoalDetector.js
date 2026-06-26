@@ -147,6 +147,17 @@ export function useGoalDetector() {
       setGoals((prev) => [...prev, fake]);
       fireNotifications([fake]);
     };
+
+    // URL trigger: add ?testgoal=1 to fire a test toast on load
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('testgoal')) {
+      window.__testGoal();
+      // Clean URL without reloading
+      params.delete('testgoal');
+      const clean = params.toString();
+      window.history.replaceState({}, '', clean ? `?${clean}` : window.location.pathname);
+    }
+
     return () => { delete window.__testGoal; };
   }, []);
 
