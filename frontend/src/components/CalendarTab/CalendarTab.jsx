@@ -6,9 +6,9 @@ import styles from './CalendarTab.module.css';
 const PHASE_LABELS = {
   group:          'GRUPOS',
   round_of_32:    'R32',
-  round_of_16:    'R16',
-  quarter_finals: 'QF',
-  semi_finals:    'SF',
+  round_of_16:    'OITAVAS',
+  quarter_finals: 'QUARTAS',
+  semi_finals:    'SEMI',
   third_place:    '3º LUGAR',
   final:          'FINAL',
 };
@@ -140,9 +140,9 @@ export default function CalendarTab() {
       <div className={styles.legend}>
         <span className={`${styles.legendItem} ${styles.phaseGroup}`}>GRUPOS</span>
         <span className={`${styles.legendItem} ${styles.phaseR32}`}>R32</span>
-        <span className={`${styles.legendItem} ${styles.phaseR16}`}>R16</span>
-        <span className={`${styles.legendItem} ${styles.phaseQF}`}>QF</span>
-        <span className={`${styles.legendItem} ${styles.phaseSF}`}>SF</span>
+        <span className={`${styles.legendItem} ${styles.phaseR16}`}>OITAVAS</span>
+        <span className={`${styles.legendItem} ${styles.phaseQF}`}>QUARTAS</span>
+        <span className={`${styles.legendItem} ${styles.phaseSF}`}>SEMI</span>
         <span className={`${styles.legendItem} ${styles.phaseFinal}`}>FINAL</span>
         <span className={`${styles.legendItem} ${styles.legendBrazil}`}>Brasil</span>
       </div>
