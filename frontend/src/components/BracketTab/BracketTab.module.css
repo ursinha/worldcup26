@@ -48,9 +48,9 @@
 }
 
 .halfDivider {
-  border-top: 1px dashed var(--border-hi);
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
 }
 
 .thirdSection {
