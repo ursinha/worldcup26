@@ -48,27 +48,16 @@ export default function GroupTable({ group, teamMap, projectedThirdIds, hasLive 
             const projectedIn = isLeading || !!projectedThirdIds?.has(entry.team_id);
             const showProjected = !isConfirmed && (groupLive || (hasLive && idx === 2));
 
-            // One compact status chip — filled = confirmed (math-locked), dashed
-            // outline = live projection. Keeps the row narrow on mobile.
-            let badge = null;
-            if (entry.clinchedWinner) badge = { cls: styles.badgeWinner, text: '1º', title: 'Classificada em 1º lugar' };
-            else if (entry.qualified) badge = { cls: styles.badgeQual,   text: '✓',  title: entry.advancedAsThird ? 'Classificada (melhor 3º lugar)' : 'Classificada' };
-            else if (isEliminated)    badge = { cls: styles.badgeElim,   text: '✗',  title: 'Eliminada' };
-            else if (showProjected)   badge = projectedIn
-              ? { cls: styles.badgeProjIn,  text: '✓', title: 'Classificação projetada (resultado ao vivo)' }
-              : { cls: styles.badgeProjOut, text: '✗', title: 'Eliminação projetada (resultado ao vivo)' };
-
-            // Row tint: confirmed status wins; otherwise the live projection; else
-            // the provisional standings leader.
-            let rowClass = '';
-            if (entry.qualified || entry.clinchedWinner) rowClass = styles.qualified;
-            else if (isEliminated) rowClass = styles.eliminated;
-            else if (showProjected) rowClass = projectedIn ? styles.projIn : styles.projOut;
-            else if (isLeading) rowClass = styles.qualified;
-
-            let borderClass = '';
-            if (entry.qualified || entry.clinchedWinner || (showProjected && projectedIn) || (!showProjected && isLeading)) borderClass = styles.qualBorder;
-            else if (isEliminated || (showProjected && !projectedIn)) borderClass = styles.elimBorder;
+            // Encode status with the row tint + left-border (no inline chip, so
+            // team names stay full): solid border = confirmed (math-locked),
+            // dashed = live projection; green = in, red = out, gold = group winner.
+            let rowClass = '', borderClass = '', statusTitle = '';
+            if (entry.clinchedWinner)               { rowClass = styles.qualified;  borderClass = styles.winBorder;     statusTitle = 'Classificada em 1º lugar'; }
+            else if (entry.qualified)               { rowClass = styles.qualified;  borderClass = styles.qualBorder;    statusTitle = entry.advancedAsThird ? 'Classificada (melhor 3º lugar)' : 'Classificada'; }
+            else if (isEliminated)                  { rowClass = styles.eliminated; borderClass = styles.elimBorder;    statusTitle = 'Eliminada'; }
+            else if (showProjected && projectedIn)  { rowClass = styles.projIn;     borderClass = styles.projInBorder;  statusTitle = 'Classificação projetada (resultado ao vivo)'; }
+            else if (showProjected && !projectedIn) { rowClass = styles.projOut;    borderClass = styles.projOutBorder; statusTitle = 'Eliminação projetada (resultado ao vivo)'; }
+            else if (isLeading)                     { rowClass = styles.leading;    borderClass = styles.qualBorder;    statusTitle = 'Entre os 2 primeiros (provisório)'; }
 
             return (
               <tr
@@ -78,12 +67,11 @@ export default function GroupTable({ group, teamMap, projectedThirdIds, hasLive 
                 <td style={{ padding: '0.5rem 0.25rem 0.5rem 0.6rem' }}>
                   <span className={styles.pos}>{idx + 1}</span>
                 </td>
-                <td className={`${styles.teamCell} ${borderClass}`}>
+                <td className={`${styles.teamCell} ${borderClass}`} title={statusTitle || undefined}>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
                   )}
                   <span className={styles.teamName}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
-                  {badge && <span className={`${styles.statusBadge} ${badge.cls}`} title={badge.title}>{badge.text}</span>}
                   {isLive && <span className={styles.liveDot} />}
                 </td>
                 {COLS.map((c) => (

@@ -64,9 +64,6 @@
 .teamName {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .table th.stat {
@@ -97,6 +94,11 @@
   color: var(--text-1);
 }
 
+/* Provisional top-2 (not yet clinched) — a fainter green than confirmed */
+.table tr.leading td {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
 .flag {
   width: 20px;
   height: 14px;
@@ -116,12 +118,28 @@
   border-left: 3px solid var(--accent);
 }
 
+/* Group winner — gold accent */
+.winBorder {
+  border-left: 3px solid var(--gold);
+}
+
+/* Live-projected borders are dashed (provisional) */
+.projInBorder {
+  border-left: 3px dashed var(--accent);
+}
+
+.projOutBorder {
+  border-left: 3px dashed var(--red);
+}
+
+/* Mathematically eliminated — red wash + muted text */
 .table tr.eliminated td {
-  opacity: 0.4;
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  color: var(--text-3);
 }
 
 .elimBorder {
-  border-left: 3px solid var(--border);
+  border-left: 3px solid var(--red);
 }
 
 /* Live match projected rows */
