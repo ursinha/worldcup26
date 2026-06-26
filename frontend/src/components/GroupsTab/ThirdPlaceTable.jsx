@@ -12,7 +12,7 @@ const COLS = [
   { key: 'pts', label: 'PTS' },
 ];
 
-export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
+export default function ThirdPlaceTable({ rankedThirds, teamMap, hasLive = false }) {
   if (!rankedThirds?.length) return null;
 
   return (
@@ -48,6 +48,14 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
                   <span className={`${styles.teamName} ${tpStyles.teamNameTp}`}>{team?.name_en ?? `ID ${entry.team_id}`}</span>
                   {entry.qualified && <span className={`${styles.statusBadge} ${styles.badgeQual}`} title="Classificada (melhor 3º lugar)">✓</span>}
                   {entry.eliminated && <span className={`${styles.statusBadge} ${styles.badgeElim}`} title="Eliminada">✗</span>}
+                  {hasLive && !entry.qualified && !entry.eliminated && (
+                    <span
+                      className={`${styles.projTag} ${entry.qualifying ? styles.projTagIn : styles.projTagOut}`}
+                      title={entry.qualifying ? 'Classificação projetada (resultado ao vivo)' : 'Eliminação projetada (resultado ao vivo)'}
+                    >
+                      projetado
+                    </span>
+                  )}
                   {entry.isLive && <span className={tpStyles.liveDot} />}
                 </td>
                 {COLS.map((c) => (

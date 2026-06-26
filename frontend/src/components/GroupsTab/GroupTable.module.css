@@ -126,6 +126,30 @@
   font-style: italic;
 }
 
+/* Live projected qualification (provisional — updates with the live score) */
+.table tr.projIn td {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.table tr.projOut td {
+  background: color-mix(in srgb, var(--red) 9%, transparent);
+}
+
+.projTag {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  border: 1px dashed currentColor;
+  opacity: 0.85;
+}
+.projTagIn  { color: var(--accent); }
+.projTagOut { color: var(--red); }
+
 .statusBadge {
   flex-shrink: 0;
   font-family: 'JetBrains Mono', monospace;

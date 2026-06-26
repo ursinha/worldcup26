@@ -53,6 +53,16 @@ export default function GroupsTab() {
     return rankThirdPlaceTeams(projectedGroups, matchesData?.games);
   }, [projectedGroups, matchesData]);
 
+  // Live projection helpers: who would currently qualify as a best third, and
+  // whether any match is in progress (so the projection is moving).
+  const projectedThirdIds = useMemo(() => {
+    return new Set(rankedThirds.filter((t) => t.qualifying).map((t) => t.team_id));
+  }, [rankedThirds]);
+
+  const hasLive = useMemo(() => {
+    return projectedGroups.some((g) => g.teams.some((t) => t.isLive));
+  }, [projectedGroups]);
+
   if (groupsLoading || teamsLoading) {
     return <div className={styles.loading}>Carregando grupos…</div>;
   }
@@ -75,13 +85,19 @@ export default function GroupsTab() {
       {subTab === 'groups' && (
         <div className={styles.grid}>
           {sortedGroups.map((group) => (
-            <GroupTable key={group.name} group={group} teamMap={teamMap} />
+            <GroupTable
+              key={group.name}
+              group={group}
+              teamMap={teamMap}
+              projectedThirdIds={projectedThirdIds}
+              hasLive={hasLive}
+            />
           ))}
         </div>
       )}
 
       {subTab === 'thirds' && (
-        <ThirdPlaceTable rankedThirds={rankedThirds} teamMap={teamMap} />
+        <ThirdPlaceTable rankedThirds={rankedThirds} teamMap={teamMap} hasLive={hasLive} />
       )}
     </div>
   );
