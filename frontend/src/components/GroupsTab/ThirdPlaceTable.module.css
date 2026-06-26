@@ -11,10 +11,6 @@
   flex-shrink: 0;
 }
 
-.teamCellTp {
-  max-width: 0; /* allow table cell to shrink with truncation */
-}
-
 .teamNameTp {
   overflow: hidden;
   text-overflow: ellipsis;

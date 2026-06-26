@@ -40,7 +40,7 @@ export default function ThirdPlaceTable({ rankedThirds, teamMap }) {
 
             return (
               <tr key={entry.team_id} className={rowClass}>
-                <td className={`${styles.teamCell} ${tpStyles.teamCellTp} ${entry.qualifying ? styles.qualBorder : styles.elimBorder}`}>
+                <td className={`${styles.teamCell} ${entry.qualifying ? styles.qualBorder : styles.elimBorder}`}>
                   <span className={tpStyles.groupBadge}>{entry.group}</span>
                   {team?.flag && (
                     <img className={styles.flag} src={team.flag} alt={team?.name_en} loading="lazy" />
