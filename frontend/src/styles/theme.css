@@ -10,7 +10,7 @@
   --surface-hi:    #1e2d48;   /* elevated surface (table header, group title) */
   --border:        #2a3f62;   /* default border — clearly visible */
   --border-hi:     #3e5a8a;   /* hover / active border */
-  --border-faint:  #182030;   /* intra-row dividers */
+  --border-faint:  #223050;   /* intra-row dividers */
   --text-1:        #f4f8ff;   /* primary text */
   --text-2:        #a0b8df;   /* secondary / metadata text — brighter */
   --text-3:        #5c7299;   /* muted / placeholders — more visible */
