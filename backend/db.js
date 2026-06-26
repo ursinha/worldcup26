@@ -78,7 +78,7 @@ db.exec(`
   );
 `);
 
-// Add prediction columns if missing (migration for existing DBs)
+// Add columns if missing (migration for existing DBs)
 {
   const cols = db.pragma('table_info(matches)').map(c => c.name);
   const toAdd = [
@@ -93,6 +93,8 @@ db.exec(`
     ['h2h_home',        'REAL'],
     ['h2h_draw',        'REAL'],
     ['h2h_away',        'REAL'],
+    ['home_penalty',    'TEXT'],
+    ['away_penalty',    'TEXT'],
   ];
   for (const [col, type] of toAdd) {
     if (!cols.includes(col)) {
@@ -110,12 +112,14 @@ const _upsertPrimary = db.prepare(`
     id, home_team_id, away_team_id, home_team_name_en, away_team_name_en,
     home_team_label, away_team_label, home_score, away_score,
     home_scorers, away_scorers, group_name, matchday, local_date,
-    stadium_id, finished, time_elapsed, type, primary_updated_at
+    stadium_id, finished, time_elapsed, type, home_penalty, away_penalty,
+    primary_updated_at
   ) VALUES (
     @id, @home_team_id, @away_team_id, @home_team_name_en, @away_team_name_en,
     @home_team_label, @away_team_label, @home_score, @away_score,
     @home_scorers, @away_scorers, @group_name, @matchday, @local_date,
-    @stadium_id, @finished, @time_elapsed, @type, @primary_updated_at
+    @stadium_id, @finished, @time_elapsed, @type, @home_penalty, @away_penalty,
+    @primary_updated_at
   )
   ON CONFLICT(id) DO UPDATE SET
     home_team_id       = excluded.home_team_id,
@@ -135,12 +139,14 @@ const _upsertPrimary = db.prepare(`
     finished           = excluded.finished,
     time_elapsed       = excluded.time_elapsed,
     type               = excluded.type,
+    home_penalty       = COALESCE(excluded.home_penalty, home_penalty),
+    away_penalty       = COALESCE(excluded.away_penalty, away_penalty),
     primary_updated_at = excluded.primary_updated_at
 `);
 
 const _upsertEnrichment = db.prepare(`
-  INSERT INTO matches (id, clock, clock_seconds, period, events, enriched_at, home_score, away_score)
-  VALUES (@id, @clock, @clock_seconds, @period, @events, @enriched_at, @home_score, @away_score)
+  INSERT INTO matches (id, clock, clock_seconds, period, events, enriched_at, home_score, away_score, home_penalty, away_penalty)
+  VALUES (@id, @clock, @clock_seconds, @period, @events, @enriched_at, @home_score, @away_score, @home_penalty, @away_penalty)
   ON CONFLICT(id) DO UPDATE SET
     clock         = excluded.clock,
     clock_seconds = excluded.clock_seconds,
@@ -148,7 +154,9 @@ const _upsertEnrichment = db.prepare(`
     events        = excluded.events,
     enriched_at   = excluded.enriched_at,
     home_score    = COALESCE(excluded.home_score, home_score),
-    away_score    = COALESCE(excluded.away_score, away_score)
+    away_score    = COALESCE(excluded.away_score, away_score),
+    home_penalty  = COALESCE(excluded.home_penalty, home_penalty),
+    away_penalty  = COALESCE(excluded.away_penalty, away_penalty)
 `);
 
 const _upsertPrediction = db.prepare(`
@@ -225,6 +233,8 @@ function rowToGame(row) {
     h2h_home:          row.h2h_home      ?? null,
     h2h_draw:          row.h2h_draw      ?? null,
     h2h_away:          row.h2h_away      ?? null,
+    home_penalty:      row.home_penalty  ?? null,
+    away_penalty:      row.away_penalty  ?? null,
   };
 }
 

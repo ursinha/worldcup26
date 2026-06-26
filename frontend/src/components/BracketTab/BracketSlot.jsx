@@ -18,6 +18,18 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
     matchWeekday = fmt.weekday.slice(0, 3); // "qua"
   }
 
+  const hasPenalties = game?.home_penalty != null && game?.away_penalty != null;
+  const homeWinner = isFinished && (
+    hasPenalties
+      ? +game.home_penalty > +game.away_penalty
+      : +game.home_score > +game.away_score
+  );
+  const awayWinner = isFinished && (
+    hasPenalties
+      ? +game.away_penalty > +game.home_penalty
+      : +game.away_score > +game.home_score
+  );
+
   return (
     <div
       className={`${styles.slot} ${hasConnector ? styles.connector : ''}`}
@@ -30,7 +42,8 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               resolved={homeResolved}
               label={game.home_team_label}
               score={isFinished || isLive ? game.home_score : null}
-              isWinner={isFinished && +game.home_score > +game.away_score}
+              penalty={hasPenalties ? game.home_penalty : null}
+              isWinner={homeWinner}
               isLive={isLive}
               showGroup={showGroup}
             />
@@ -39,7 +52,8 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               resolved={awayResolved}
               label={game.away_team_label}
               score={isFinished || isLive ? game.away_score : null}
-              isWinner={isFinished && +game.away_score > +game.home_score}
+              penalty={hasPenalties ? game.away_penalty : null}
+              isWinner={awayWinner}
               showGroup={showGroup}
             />
             {isNotStarted && matchDate && (
@@ -54,7 +68,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
   );
 }
 
-function TeamRow({ resolved, label, score, isWinner, isLive, showGroup }) {
+function TeamRow({ resolved, label, score, penalty, isWinner, isLive, showGroup }) {
   const { team, projected, group } = resolved ?? { team: null, projected: false, group: null };
 
   return (
@@ -73,7 +87,9 @@ function TeamRow({ resolved, label, score, isWinner, isLive, showGroup }) {
       {showGroup && group && <span className={styles.groupBadge}>{group}</span>}
       {isLive && <span className={styles.liveBadge}>AO VIVO</span>}
       {score !== null && (
-        <span className={`${styles.score} ${isWinner ? styles.winner : ''}`}>{score}</span>
+        <span className={`${styles.score} ${isWinner ? styles.winner : ''}`}>
+          {score}{penalty != null && <span className={styles.penaltyScore}> ({penalty})</span>}
+        </span>
       )}
     </div>
   );

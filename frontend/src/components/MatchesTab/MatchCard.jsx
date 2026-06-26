@@ -99,6 +99,9 @@ export default function MatchCard({ game, teamMap, stadiumMap }) {
               <span className={`${styles.score} ${scorePulse ? styles.scorePulse : ''}`}>
                 {game.home_score} – {game.away_score}
               </span>
+              {game.home_penalty != null && game.away_penalty != null && (
+                <span className={styles.penaltyLine}>({game.home_penalty} – {game.away_penalty}) pen</span>
+              )}
               {isLive && clock && (
                 <span className={styles.elapsed}>{clock}</span>
               )}

@@ -129,8 +129,13 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
     const game = gameMap[wm[1]];
     if (!game) return { team: null, projected: false, group: null };
     if (game.finished === 'TRUE') {
-      const winnerId =
-        +game.home_score > +game.away_score ? game.home_team_id : game.away_team_id;
+      let winnerId;
+      if (+game.home_score !== +game.away_score) {
+        winnerId = +game.home_score > +game.away_score ? game.home_team_id : game.away_team_id;
+      } else {
+        // Draw after extra time → penalty shootout decides
+        winnerId = +game.home_penalty > +game.away_penalty ? game.home_team_id : game.away_team_id;
+      }
       const team = teamMap[winnerId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }
@@ -147,8 +152,12 @@ export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0
     const game = gameMap[lm[1]];
     if (!game) return { team: null, projected: false, group: null };
     if (game.finished === 'TRUE') {
-      const loserId =
-        +game.home_score <= +game.away_score ? game.home_team_id : game.away_team_id;
+      let loserId;
+      if (+game.home_score !== +game.away_score) {
+        loserId = +game.home_score < +game.away_score ? game.home_team_id : game.away_team_id;
+      } else {
+        loserId = +game.home_penalty < +game.away_penalty ? game.home_team_id : game.away_team_id;
+      }
       const team = teamMap[loserId] ?? null;
       return { team, projected: false, group: team?.groups?.[0] ?? null };
     }

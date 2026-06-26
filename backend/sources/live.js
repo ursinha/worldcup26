@@ -43,7 +43,8 @@ function mapDetail(detail, homeId, awayId) {
     const subtype = detail.penaltyKick ? 'penalty'
       : (detail.type?.text ?? '').toLowerCase().includes('free') ? 'free_kick'
       : null;
-    return { type: 'goal', minute, player, team, subtype };
+    const shootout = detail.shootout ?? false;
+    return { type: 'goal', minute, player, team, subtype, shootout };
   }
   return null;
 }
@@ -86,17 +87,25 @@ export function extractUpdates(rawData, currentMatches) {
     const events = (comp.details ?? []).map(d => mapDetail(d, homeId, awayId)).filter(Boolean);
     const isPost = state === 'post';
 
+    // Compute penalty shootout scores from events
+    const penHome = events.filter(e => e.type === 'goal' && e.subtype === 'penalty' && e.team === 'home' && e.shootout).length;
+    const penAway = events.filter(e => e.type === 'goal' && e.subtype === 'penalty' && e.team === 'away' && e.shootout).length;
+    const period = mapPeriod(status.type);
+    const hasPenalties = period === 'PEN' || (isPost && penHome + penAway > 0);
+
     updates.push({
       id:            match.id,
       // don't store clock for finished matches — it's not used for display
       clock:         isPost ? null : (status.displayClock ?? null),
       clock_seconds: isPost ? null : (typeof status.clock === 'number' ? status.clock : null),
-      period:        mapPeriod(status.type),
+      period,
       events:        JSON.stringify(events),
       enriched_at:   now,
       // real-time scores from ESPN; null for post so primary source stays authoritative
       home_score:    isPost ? null : (homeComp.score ?? null),
       away_score:    isPost ? null : (awayComp.score ?? null),
+      home_penalty:  hasPenalties ? String(penHome) : null,
+      away_penalty:  hasPenalties ? String(penAway) : null,
     });
   }
 

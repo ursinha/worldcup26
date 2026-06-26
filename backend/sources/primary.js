@@ -45,6 +45,8 @@ export function extractUpdates(rawData) {
     finished:          g.finished          ?? null,
     time_elapsed:      g.time_elapsed      ?? null,
     type:              g.type              ?? null,
+    home_penalty:      g.home_penalty      ?? null,
+    away_penalty:      g.away_penalty      ?? null,
     primary_updated_at: now,
   }));
 }
