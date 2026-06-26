@@ -129,8 +129,16 @@ const _upsertPrimary = db.prepare(`
     away_team_name_en  = excluded.away_team_name_en,
     home_team_label    = excluded.home_team_label,
     away_team_label    = excluded.away_team_label,
-    home_score         = excluded.home_score,
-    away_score         = excluded.away_score,
+    -- While a match is live and the live (ESPN) source is enriching it, let
+    -- that source own the score. Otherwise the slower primary feed can briefly
+    -- overwrite a fresh live goal with its own stale score, making the card
+    -- flip back to the old score until the primary feed catches up.
+    home_score = CASE
+      WHEN enriched_at IS NOT NULL AND excluded.finished = 'FALSE' AND excluded.time_elapsed != 'notstarted'
+      THEN home_score ELSE excluded.home_score END,
+    away_score = CASE
+      WHEN enriched_at IS NOT NULL AND excluded.finished = 'FALSE' AND excluded.time_elapsed != 'notstarted'
+      THEN away_score ELSE excluded.away_score END,
     home_scorers       = excluded.home_scorers,
     away_scorers       = excluded.away_scorers,
     group_name         = excluded.group_name,
