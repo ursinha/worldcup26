@@ -21,6 +21,9 @@
   --score-color:   #ffffff;   /* big score numbers */
   --half-upper:    #4a90d9;   /* bracket upper half stripe */
   --half-lower:    #d4a04a;   /* bracket lower half stripe */
+  --gold:          #d4a020;   /* final match — trophy gold */
+  --gold-dim:      rgba(212, 160, 32, 0.10);
+  --gold-border:   rgba(212, 160, 32, 0.35);
 }
 
 [data-theme="light"] {
@@ -43,6 +46,9 @@
   --score-color:   #0a1125;
   --half-upper:    #2a6cb8;   /* bracket upper half stripe */
   --half-lower:    #b8862a;   /* bracket lower half stripe */
+  --gold:          #a07818;   /* final match — trophy gold */
+  --gold-dim:      rgba(160, 120, 24, 0.08);
+  --gold-border:   rgba(160, 120, 24, 0.30);
 }
 
 /* ── Global resets ───────────────────────────────────────────────────────── */
