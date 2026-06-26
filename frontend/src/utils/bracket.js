@@ -108,6 +108,22 @@ function isSlotSourceUnresolved(label, gameMap, groupMap) {
 }
 
 /**
+ * True for a slot whose source is a group placeholder ("Winner/Runner-up
+ * Group X", "3rd Group …"). For these we always resolve from our own
+ * recomputed standings and ignore any id the feed pre-filled, so the bracket
+ * and match cards agree with the Groups tab (which uses the full FIFA
+ * tiebreakers, incl. head-to-head). The feed pre-fills these ids with a simpler
+ * sort and can disagree.
+ */
+export function isGroupPlaceholderLabel(label) {
+  return !!label && (
+    /^Winner Group [A-L]$/.test(label) ||
+    /^Runner-up Group [A-L]$/.test(label) ||
+    /^3rd Group /.test(label)
+  );
+}
+
+/**
  * Resolve a slot (teamId + label from the API) to { team, projected }.
  * - team       : team object from teamMap, or null if unknown
  * - projected  : true when the result is based on current standings (not confirmed)
@@ -119,12 +135,12 @@ function isSlotSourceUnresolved(label, gameMap, groupMap) {
 export function resolveSlot(teamId, label, gameMap, groupMap, teamMap, depth = 0, opts = {}) {
   if (depth > 5) return { team: null, projected: false, group: null };
 
-  // API already assigned a real team
-  if (teamId && teamId !== '0') {
+  // A real, decided team id (knockout result, or a non-group slot) — trust it.
+  // Group placeholders are skipped here and resolved from our standings below,
+  // ignoring any id the feed guessed.
+  if (teamId && teamId !== '0' && !isGroupPlaceholderLabel(label)) {
     const team = teamMap[teamId] ?? null;
     const group = team?.groups?.[0] ?? null;
-    // Trust the id only when the slot's source (group standings / feeding match)
-    // is actually decided; otherwise the feed is guessing — mark it projected.
     const projected = isSlotSourceUnresolved(label, gameMap, groupMap);
     return { team, projected, group };
   }

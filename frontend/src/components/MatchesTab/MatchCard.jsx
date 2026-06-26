@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { gameToUTC, formatBRT } from '../../utils/time';
 import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
-import { resolveSlot } from '../../utils/bracket';
+import { resolveSlot, isGroupPlaceholderLabel } from '../../utils/bracket';
 import { teamNamePt, matchLabelPt } from '../../utils/i18n';
 import styles from './MatchCard.module.css';
 
@@ -46,20 +46,31 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
   const homeTeam = teamMap[game.home_team_id];
   const awayTeam = teamMap[game.away_team_id];
 
-  // Resolve knockout team names when home_team_name_en is absent
-  const homeResolved = (!game.home_team_name_en && gameMap && groupMap)
+  // Resolve from our own standings for group-placeholder slots (ignoring the
+  // feed's pre-filled id) and whenever the team name is absent — so the card
+  // agrees with the Groups tab and the bracket.
+  const homeGroupSlot = isGroupPlaceholderLabel(game.home_team_label);
+  const awayGroupSlot = isGroupPlaceholderLabel(game.away_team_label);
+  const homeResolved = ((homeGroupSlot || !game.home_team_name_en) && gameMap && groupMap)
     ? resolveSlot(game.home_team_id, game.home_team_label, gameMap, groupMap, teamMap, 0, { thirdPlaceAssignment, currentMatchId: game.id })
     : null;
-  const awayResolved = (!game.away_team_name_en && gameMap && groupMap)
+  const awayResolved = ((awayGroupSlot || !game.away_team_name_en) && gameMap && groupMap)
     ? resolveSlot(game.away_team_id, game.away_team_label, gameMap, groupMap, teamMap, 0, { thirdPlaceAssignment, currentMatchId: game.id })
     : null;
 
   const homeProjected = homeResolved?.projected && !!homeResolved?.team;
   const awayProjected = awayResolved?.projected && !!awayResolved?.team;
-  const homeName = teamNamePt(game.home_team_name_en) ?? teamNamePt(homeResolved?.team?.name_en) ?? matchLabelPt(game.home_team_label) ?? '?';
-  const awayName = teamNamePt(game.away_team_name_en) ?? teamNamePt(awayResolved?.team?.name_en) ?? matchLabelPt(game.away_team_label) ?? '?';
-  const homeFlag = homeTeam?.flag ?? homeResolved?.team?.flag;
-  const awayFlag = awayTeam?.flag ?? awayResolved?.team?.flag;
+  // For group-placeholder slots our resolution wins over the feed's pre-fill.
+  const homeName = (homeGroupSlot
+    ? teamNamePt(homeResolved?.team?.name_en)
+    : teamNamePt(game.home_team_name_en) ?? teamNamePt(homeResolved?.team?.name_en)
+  ) ?? matchLabelPt(game.home_team_label) ?? '?';
+  const awayName = (awayGroupSlot
+    ? teamNamePt(awayResolved?.team?.name_en)
+    : teamNamePt(game.away_team_name_en) ?? teamNamePt(awayResolved?.team?.name_en)
+  ) ?? matchLabelPt(game.away_team_label) ?? '?';
+  const homeFlag = homeGroupSlot ? homeResolved?.team?.flag : (homeTeam?.flag ?? homeResolved?.team?.flag);
+  const awayFlag = awayGroupSlot ? awayResolved?.team?.flag : (awayTeam?.flag ?? awayResolved?.team?.flag);
   const stadium  = stadiumMap[game.stadium_id];
 
   const utcDate = gameToUTC(game.local_date, game.stadium_id);
