@@ -67,6 +67,7 @@
   border: 1px solid transparent;
   transition: border-color 0.15s;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .cell.hasMatches {
@@ -207,10 +208,10 @@
   font-weight: 800;
 }
 
-/* "BRA" corner chip */
+/* "BRA" chip — bottom corner so it doesn't sit on the date number */
 .brazilMark {
   position: absolute;
-  top: 2px;
+  bottom: 2px;
   left: 3px;
   font-size: 0.5rem;
   font-weight: 800;
