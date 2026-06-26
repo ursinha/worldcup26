@@ -166,7 +166,7 @@ export default function BracketTab() {
               game={finalGame ?? null}
               homeResolved={finalHome}
               awayResolved={finalAway}
-              slotHeight={finalSlotH}
+              slotHeight={null}
               hasConnector={false}
               showGroup={false}
             />
