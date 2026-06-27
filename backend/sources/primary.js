@@ -1,7 +1,7 @@
 const SOURCE_BASE = 'https://worldcup26.ir';
 
 export const id = 'primary';
-export const intervals = { live: 10_000, idle: 2 * 60 * 60_000 };
+export const intervals = { live: 30_000, idle: 2 * 60 * 60_000 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Retry transient server errors, but NOT 429 (rate limit) — backing off to the
