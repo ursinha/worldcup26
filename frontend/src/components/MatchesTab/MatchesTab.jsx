@@ -5,6 +5,7 @@ import { matchStatus } from '../../utils/parsers';
 import { resolveSlot } from '../../utils/bracket';
 import { projectStandings } from '../../utils/projectedStandings';
 import { rankThirdPlaceTeams, resolveThirdPlaceSlots } from '../../utils/thirdPlace';
+import { teamNamePt, normalizeText } from '../../utils/i18n';
 import MatchCard from './MatchCard';
 import styles from './MatchesTab.module.css';
 
@@ -35,6 +36,7 @@ function buildDateGroups(games, reverse = false) {
 export default function MatchesTab() {
   const savedFilter = localStorage.getItem('wc-matches-filter');
   const [filter, setFilterRaw] = useState(savedFilter ?? 'live');
+  const [query, setQuery] = useState('');
   const [matchInterval, setMatchInterval] = useState(15_000);
   const initialFilterSet = useRef(!!savedFilter);
 
@@ -106,6 +108,8 @@ export default function MatchesTab() {
 
   // Filter + sort games
   const today = todayBRT();
+  const trimmedQuery = query.trim();
+  const searching = trimmedQuery.length > 0;
 
   const filteredGames = useMemo(() => {
     if (!matchesData?.games) return [];
@@ -180,6 +184,20 @@ export default function MatchesTab() {
     return buildDateGroups(filteredGames, reverseDate);
   }, [filteredGames, filter]);
 
+  // Team search: when active, show all of that team's matches across the
+  // tournament (chronological), overriding the status filter. Matches on the
+  // English name and its pt-BR form, accent-insensitive.
+  const searchGroups = useMemo(() => {
+    if (!searching || !matchesData?.games) return [];
+    const q = normalizeText(trimmedQuery);
+    const matches = matchesData.games.filter((game) =>
+      [game.home_team_name_en, game.away_team_name_en].some(
+        (n) => n && (normalizeText(n).includes(q) || normalizeText(teamNamePt(n)).includes(q)),
+      ),
+    );
+    return buildDateGroups(matches, false);
+  }, [searching, trimmedQuery, matchesData]);
+
   const renderDateGroups = (groups, keyPrefix = '') => groups.map(({ isoDate, label, games }) => (
     <div key={`${keyPrefix}${isoDate}`} className={styles.dateGroup}>
       <div className={styles.dateHeading}>{label}</div>
@@ -195,9 +213,11 @@ export default function MatchesTab() {
     return <div className={styles.loading}>Carregando partidas…</div>;
   }
 
-  const isEmpty = filter === 'all'
-    ? allSections.finishedGroups.length === 0 && allSections.upcomingGroups.length === 0
-    : groupedByDate.length === 0;
+  const isEmpty = searching
+    ? searchGroups.length === 0
+    : filter === 'all'
+      ? allSections.finishedGroups.length === 0 && allSections.upcomingGroups.length === 0
+      : groupedByDate.length === 0;
 
   return (
     <div className={styles.container}>
@@ -205,17 +225,31 @@ export default function MatchesTab() {
         {FILTERS.filter(({ key }) => key !== 'live' || hasLive).map(({ key, label }) => (
           <button
             key={key}
-            className={`${styles.filterBtn} ${filter === key ? styles.active : ''}`}
+            className={`${styles.filterBtn} ${!searching && filter === key ? styles.active : ''}`}
             onClick={() => setFilter(key)}
           >
             {label}
           </button>
         ))}
+        <input
+          type="search"
+          className={styles.search}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar seleção…"
+          aria-label="Buscar seleção"
+        />
       </div>
 
-      {isEmpty && <div className={styles.empty}>Nenhuma partida encontrada.</div>}
+      {isEmpty && (
+        <div className={styles.empty}>
+          {searching ? `Nenhuma partida encontrada para “${trimmedQuery}”.` : 'Nenhuma partida encontrada.'}
+        </div>
+      )}
 
-      {filter === 'all' && allSections ? (
+      {searching ? (
+        renderDateGroups(searchGroups, 'search-')
+      ) : filter === 'all' && allSections ? (
         <>
           {renderDateGroups(allSections.finishedGroups, 'fin-')}
           {allSections.upcomingGroups.length > 0 && allSections.finishedGroups.length > 0 && (

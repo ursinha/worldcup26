@@ -59,6 +59,14 @@ export const PT_TEAMS = {
 };
 
 /**
+ * Lowercase and strip diacritics for accent-insensitive text matching
+ * (e.g. "mexico" matches "México", "brasil" matches "Brasil").
+ */
+export function normalizeText(s) {
+  return (s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+
+/**
  * Localize a team's English name to pt-BR. Returns `undefined` for an empty
  * input so existing `?? \`ID …\`` / label fallbacks keep working; unknown names
  * pass through unchanged.
