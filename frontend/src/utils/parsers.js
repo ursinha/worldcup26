@@ -4,9 +4,14 @@
  */
 export function parseScorers(raw) {
   if (!raw || raw === 'null') return [];
-  // Extract all quoted strings from within the curly-brace wrapper
-  const matches = [...raw.matchAll(/"([^"]+)"/g)];
-  return matches.map((m) => m[1]);
+  // Strip the curly-brace wrapper, split on commas, and trim the surrounding
+  // double quotes — the feed mixes straight (") and smart (“ ”) quotes, and
+  // uses the literal string "null" for a side with no scorers.
+  return raw
+    .replace(/^\{|\}$/g, '')
+    .split(',')
+    .map((s) => s.trim().replace(/^["“”]+|["“”]+$/g, '').trim())
+    .filter((s) => s && s.toLowerCase() !== 'null');
 }
 
 /**

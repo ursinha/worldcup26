@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePolling } from './usePolling';
 import { teamNamePt } from '../utils/i18n';
+import { parseScorers } from '../utils/parsers';
 
 const TOAST_DURATION = 8_000;
 const TITLE_FLASH_INTERVAL = 2_000;
@@ -170,11 +171,10 @@ export function useGoalDetector() {
  * Scorer format is like "Player 45', Player2 67'"
  */
 function extractNewScorer(oldScorers, newScorers) {
-  if (!newScorers) return null;
-  const oldParts = new Set((oldScorers ?? '').split(',').map((s) => s.trim()).filter(Boolean));
-  const newParts = newScorers.split(',').map((s) => s.trim()).filter(Boolean);
+  const oldParts = new Set(parseScorers(oldScorers));
+  const newParts = parseScorers(newScorers);
   const added = newParts.filter((p) => !oldParts.has(p));
-  return added.length > 0 ? added[added.length - 1] : newParts[newParts.length - 1] ?? null;
+  return added.length > 0 ? added[added.length - 1] : (newParts[newParts.length - 1] ?? null);
 }
 
 /**
