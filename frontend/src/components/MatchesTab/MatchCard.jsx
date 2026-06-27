@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { gameToUTC, formatBRT } from '../../utils/time';
-import { matchStatus, stageLabel, parseScorers } from '../../utils/parsers';
+import { matchStatus, stageLabel, parseScorers, scorersFromEvents } from '../../utils/parsers';
 import { resolveSlot, isGroupPlaceholderLabel } from '../../utils/bracket';
 import { teamNamePt, matchLabelPt } from '../../utils/i18n';
 import styles from './MatchCard.module.css';
@@ -77,8 +77,13 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
   const { date: brtDate, time: kickoffBRT } = formatBRT(utcDate);
   const shortDate = brtDate.slice(0, 5); // "23/06"
 
-  const homeScorers = (isFinished || isLive) ? parseScorers(game.home_scorers) : [];
-  const awayScorers = (isFinished || isLive) ? parseScorers(game.away_scorers) : [];
+  // Scorers from ESPN events (single source, consistent with the score). Fall
+  // back to the primary feed's strings only when ESPN hasn't enriched the match.
+  const showScorers = isFinished || isLive;
+  const evScorers   = scorersFromEvents(game.events);
+  const useEvents   = game.enriched_at != null;
+  const homeScorers = showScorers ? (useEvents ? evScorers.home : parseScorers(game.home_scorers)) : [];
+  const awayScorers = showScorers ? (useEvents ? evScorers.away : parseScorers(game.away_scorers)) : [];
   const hasScorers  = homeScorers.length > 0 || awayScorers.length > 0;
 
   const cards     = game.events?.filter(e => e.type === 'yellow_card' || e.type === 'red_card') ?? [];

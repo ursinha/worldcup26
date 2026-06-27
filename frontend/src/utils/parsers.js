@@ -15,6 +15,31 @@ export function parseScorers(raw) {
 }
 
 /**
+ * Build per-side scorer lists from ESPN goal events (the live source) — the
+ * single source of truth for live scores/scorers. Each entry is "Player 45'".
+ * Own goals are credited to the opposite side with a "(GC)" marker; penalty
+ * shootout goals are excluded (they aren't match goals).
+ *
+ * @param {Array} events - parsed events from the match (`game.events`)
+ * @returns {{home: string[], away: string[]}}
+ */
+export function scorersFromEvents(events) {
+  const home = [];
+  const away = [];
+  for (const e of events ?? []) {
+    if (e.shootout) continue;
+    const label = `${e.player ?? '?'} ${e.minute ?? ''}`.trim();
+    if (e.type === 'goal') {
+      (e.team === 'home' ? home : away).push(label);
+    } else if (e.type === 'own_goal') {
+      // an own goal counts for the opposing side
+      (e.team === 'home' ? away : home).push(`${label} (GC)`);
+    }
+  }
+  return { home, away };
+}
+
+/**
  * Determine match status from API fields.
  * Returns: 'finished' | 'live' | 'notstarted'
  */

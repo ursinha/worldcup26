@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePolling } from './usePolling';
 import { teamNamePt } from '../utils/i18n';
-import { parseScorers } from '../utils/parsers';
 
 const TOAST_DURATION = 8_000;
 const TITLE_FLASH_INTERVAL = 2_000;
@@ -9,13 +8,17 @@ const TITLE_FLASH_MAX = 30_000;
 
 let goalIdCounter = 0;
 
+// Stable key for a goal event so we can tell new ones from already-seen ones.
+const goalKey = (e) => `${e.type}|${e.team}|${e.player ?? ''}|${e.minute ?? ''}`;
+
 /**
- * Detect new goals by diffing match scores between polls.
+ * Detect new goals from ESPN goal events between polls (the scorer travels with
+ * the goal, so the team/score/scorer are always consistent — no cross-source lag).
  * Returns { goals, dismiss } where goals is an array of active notifications.
  */
 export function useGoalDetector() {
   const { data } = usePolling('/api/matches', 15_000);
-  const prevScoresRef = useRef(null); // { matchId: { home, away, homeName, awayName } }
+  const prevGoalsRef = useRef(null); // { matchId: Set<goalKey> }
   const [goals, setGoals] = useState([]);
   const originalTitleRef = useRef(document.title);
   const titleTimerRef = useRef(null);
@@ -71,66 +74,53 @@ export function useGoalDetector() {
     };
   }, [goals]);
 
-  // Diff scores on each poll
+  // Detect new goals from ESPN goal events on each poll
   useEffect(() => {
     if (!data?.games) return;
 
-    const currentScores = {};
+    // Per match: map of goalKey → toast payload (built from the goal event)
+    const current = {};
     for (const game of data.games) {
-      currentScores[game.id] = {
-        home: +game.home_score || 0,
-        away: +game.away_score || 0,
-        homeName: teamNamePt(game.home_team_name_en),
-        awayName: teamNamePt(game.away_team_name_en),
-        homeScorers: game.home_scorers ?? '',
-        awayScorers: game.away_scorers ?? '',
-      };
+      const m = new Map();
+      const homeName = teamNamePt(game.home_team_name_en);
+      const awayName = teamNamePt(game.away_team_name_en);
+      for (const e of game.events ?? []) {
+        if (e.shootout || (e.type !== 'goal' && e.type !== 'own_goal')) continue;
+        // an own goal counts for the opposing side
+        const side = e.type === 'own_goal' ? (e.team === 'home' ? 'away' : 'home') : e.team;
+        const scorer = `${e.player ?? '?'} ${e.minute ?? ''}`.trim() + (e.type === 'own_goal' ? ' (GC)' : '');
+        m.set(goalKey(e), {
+          matchId: game.id,
+          teamName: side === 'home' ? homeName : awayName,
+          scorer,
+          homeScore: +game.home_score || 0,
+          awayScore: +game.away_score || 0,
+          homeName,
+          awayName,
+        });
+      }
+      current[game.id] = m;
     }
 
-    const prev = prevScoresRef.current;
+    const prev = prevGoalsRef.current;
     if (prev) {
       const newGoals = [];
-
-      for (const [matchId, cur] of Object.entries(currentScores)) {
-        const old = prev[matchId];
-        if (!old) continue;
-
-        if (cur.home > old.home) {
-          const scorer = extractNewScorer(old.homeScorers, cur.homeScorers);
-          newGoals.push({
-            id: ++goalIdCounter,
-            matchId,
-            teamName: cur.homeName,
-            scorer,
-            homeScore: cur.home,
-            awayScore: cur.away,
-            homeName: cur.homeName,
-            awayName: cur.awayName,
-          });
-        }
-
-        if (cur.away > old.away) {
-          const scorer = extractNewScorer(old.awayScorers, cur.awayScorers);
-          newGoals.push({
-            id: ++goalIdCounter,
-            matchId,
-            teamName: cur.awayName,
-            scorer,
-            homeScore: cur.home,
-            awayScore: cur.away,
-            homeName: cur.homeName,
-            awayName: cur.awayName,
-          });
+      for (const [matchId, m] of Object.entries(current)) {
+        const seen = prev[matchId];
+        if (!seen) continue; // newly-appeared match — baseline it, don't fire
+        for (const [key, payload] of m) {
+          if (!seen.has(key)) newGoals.push({ id: ++goalIdCounter, ...payload });
         }
       }
-
       if (newGoals.length > 0) {
-        setGoals((prev) => [...prev, ...newGoals]);
+        setGoals((g) => [...g, ...newGoals]);
         fireNotifications(newGoals);
       }
     }
 
-    prevScoresRef.current = currentScores;
+    prevGoalsRef.current = Object.fromEntries(
+      Object.entries(current).map(([id, m]) => [id, new Set(m.keys())]),
+    );
   }, [data]);
 
   // Dev helper: call window.__testGoal() in the console to trigger a fake toast
@@ -164,20 +154,6 @@ export function useGoalDetector() {
   }, []);
 
   return { goals, dismiss };
-}
-
-/**
- * Try to extract the new scorer name by diffing scorer strings.
- * Scorer format is like "Player 45', Player2 67'"
- */
-function extractNewScorer(oldScorers, newScorers) {
-  const oldParts = new Set(parseScorers(oldScorers));
-  const newParts = parseScorers(newScorers);
-  const added = newParts.filter((p) => !oldParts.has(p));
-  // Only return a genuinely new scorer. If the scorers list hasn't caught up to
-  // the score yet, return null rather than the last known name — otherwise the
-  // toast would show the *previous* goal's scorer.
-  return added.length > 0 ? added[added.length - 1] : null;
 }
 
 /**
