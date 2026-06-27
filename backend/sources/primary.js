@@ -3,23 +3,45 @@ const SOURCE_BASE = 'https://worldcup26.ir';
 export const id = 'primary';
 export const intervals = { live: 10_000, idle: 2 * 60 * 60_000 };
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Retry transient server errors, but NOT 429 (rate limit) — backing off to the
+// next scheduled poll is the right move there.
+const RETRY_STATUS = new Set([500, 502, 503, 504]);
+
+/**
+ * Fetch JSON with a couple of quick retries so a single transient blip
+ * (the occasional "fetch failed" network hiccup, or a 5xx) doesn't surface as
+ * a source error. Backoff is short: 400ms, then 800ms.
+ */
+async function fetchJson(url, { retries = 2, baseDelay = 400 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) await sleep(baseDelay * attempt);
+    try {
+      const res = await fetch(url);
+      if (res.ok) return res.json();
+      lastErr = new Error(`HTTP ${res.status}`);
+      if (!RETRY_STATUS.has(res.status)) break; // non-transient: stop retrying
+    } catch (err) {
+      lastErr = err; // network error (e.g. "fetch failed") — retry
+    }
+  }
+  throw lastErr;
+}
+
 export async function fetchData() {
-  const res = await fetch(`${SOURCE_BASE}/get/games`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return fetchJson(`${SOURCE_BASE}/get/games`);
 }
 
 export async function fetchGroups() {
-  const res = await fetch(`${SOURCE_BASE}/get/groups`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return fetchJson(`${SOURCE_BASE}/get/groups`);
 }
 
 export async function fetchStatic() {
   const [groups, teams, stadiums] = await Promise.all([
-    fetch(`${SOURCE_BASE}/get/groups`).then(r => r.json()),
-    fetch(`${SOURCE_BASE}/get/teams`).then(r => r.json()),
-    fetch(`${SOURCE_BASE}/get/stadiums`).then(r => r.json()),
+    fetchJson(`${SOURCE_BASE}/get/groups`),
+    fetchJson(`${SOURCE_BASE}/get/teams`),
+    fetchJson(`${SOURCE_BASE}/get/stadiums`),
   ]);
   return { groups, teams, stadiums };
 }
