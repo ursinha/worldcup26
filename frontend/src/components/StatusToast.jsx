@@ -3,7 +3,7 @@ import styles from './GoalToast.module.css';
 
 const KINDS = {
   winner:     { icon: '🏆', label: 'Classificada em 1º',      body: (t, g) => `${t} venceu o Grupo ${g}` },
-  qualified:  { icon: '✓',  label: 'Classificada',            body: (t) => `${t} garantiu vaga nas oitavas` },
+  qualified:  { icon: '✓',  label: 'Classificada',            body: (t) => `${t} garantiu vaga nos 16 avos de final` },
   eliminated: { icon: '✗',  label: 'Eliminada',               body: (t) => `${t} está fora` },
   'proj-in':  { icon: '↗',  label: 'Classificação projetada', body: (t) => `${t} se classificaria agora (ao vivo)` },
   'proj-out': { icon: '↘',  label: 'Eliminação projetada',    body: (t) => `${t} estaria fora agora (ao vivo)` },
