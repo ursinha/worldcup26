@@ -57,6 +57,12 @@ Sources are defined as modules under `backend/sources/`. Each exports `id`, `int
 
 To add or swap a source, add a new file under `backend/sources/` following the same interface.
 
+**Odds is optional and disabled by default.** It only calibrates the prediction
+model, which falls back to the pure (match-results-only) model without it. To
+(re)enable, set `ODDS_ENABLED=true` and provide a valid key for the provider in
+`backend/sources/odds.js` (currently The Odds API via `ODDS_API_KEY`). Swapping
+providers = replace that one module; nothing else changes.
+
 ---
 
 ## Project structure

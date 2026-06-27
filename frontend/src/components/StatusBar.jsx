@@ -71,18 +71,21 @@ export default function StatusBar() {
         <div className={styles.panel}>
           {Object.entries(SOURCE_LABELS).map(([key, label]) => {
             const s = sources[key] ?? {};
-            const hasError = !!s.lastError;
-            const hasData  = !!s.lastFetch;
+            const disabled = !!s.disabled;
+            const hasError = !disabled && !!s.lastError;
+            const hasData  = !disabled && !!s.lastFetch;
             return (
               <div key={key} className={styles.sourceRow}>
                 <span className={`${styles.sourceDot} ${hasError ? styles.error : hasData ? styles.ok : styles.idle}`} />
                 <span className={styles.sourceName}>{label}</span>
-                <span className={styles.sourceTime}>{s.lastFetch ? formatStatusTime(s.lastFetch) : '—'}</span>
-                <span className={styles.sourceNext}>{formatIn(s.nextPoll)}</span>
+                <span className={styles.sourceTime}>{!disabled && s.lastFetch ? formatStatusTime(s.lastFetch) : '—'}</span>
+                <span className={styles.sourceNext}>{disabled ? '—' : formatIn(s.nextPoll)}</span>
                 <span className={styles.sourceDetail}>
-                  {hasError
-                    ? <span className={styles.sourceErr}>{s.lastError}</span>
-                    : s.calls != null ? `${s.calls.h24}/24h · ${s.calls.total} total` : ''}
+                  {disabled
+                    ? 'Desativado'
+                    : hasError
+                      ? <span className={styles.sourceErr}>{s.lastError}</span>
+                      : s.calls != null ? `${s.calls.h24}/24h · ${s.calls.total} total` : ''}
                 </span>
               </div>
             );

@@ -400,7 +400,12 @@ function buildResolvedRows(games, groups, teams) {
   return rows;
 }
 
-// Odds source — O/U lines from The Odds API
+// Odds source — optional. It only calibrates predictions, which fall back to
+// the pure model without it. Disabled by default; to (re)enable, set
+// ODDS_ENABLED=true and provide a valid key for the provider in sources/odds.js.
+// Swapping providers later = replace sources/odds.js (same id/fetch/extract
+// interface) — nothing else here changes.
+const ODDS_ENABLED = process.env.ODDS_ENABLED === 'true';
 let oddsTimer = null;
 
 async function pollOdds() {
@@ -448,7 +453,12 @@ try {
 await pollPrimary();
 pollLive();
 backfillEvents();
-pollOdds();
+if (ODDS_ENABLED) {
+  pollOdds();
+} else {
+  sourceState.odds.disabled = true;
+  console.log(`[${oddsSource.id}] disabled (set ODDS_ENABLED=true to enable)`);
+}
 
 // ---------------------------------------------------------------------------
 // Routes
