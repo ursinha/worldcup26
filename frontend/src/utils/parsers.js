@@ -29,12 +29,11 @@ export function scorersFromEvents(events) {
   for (const e of events ?? []) {
     if (e.shootout) continue;
     const label = `${e.player ?? '?'} ${e.minute ?? ''}`.trim();
-    if (e.type === 'goal') {
-      (e.team === 'home' ? home : away).push(label);
-    } else if (e.type === 'own_goal') {
-      // an own goal counts for the opposing side
-      (e.team === 'home' ? away : home).push(`${label} (GC)`);
-    }
+    // ESPN already reports `team` as the side the goal counts for (for own goals
+    // that's the benefiting side, with the opponent's player named).
+    const side = e.team === 'home' ? home : away;
+    if (e.type === 'goal') side.push(label);
+    else if (e.type === 'own_goal') side.push(`${label} (GC)`);
   }
   return { home, away };
 }

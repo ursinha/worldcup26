@@ -86,8 +86,9 @@ export function useGoalDetector() {
       const awayName = teamNamePt(game.away_team_name_en);
       for (const e of game.events ?? []) {
         if (e.shootout || (e.type !== 'goal' && e.type !== 'own_goal')) continue;
-        // an own goal counts for the opposing side
-        const side = e.type === 'own_goal' ? (e.team === 'home' ? 'away' : 'home') : e.team;
+        // ESPN reports `team` as the side the goal counts for (benefiting side
+        // for own goals).
+        const side = e.team;
         const scorer = `${e.player ?? '?'} ${e.minute ?? ''}`.trim() + (e.type === 'own_goal' ? ' (GC)' : '');
         m.set(goalKey(e), {
           matchId: game.id,

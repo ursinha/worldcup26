@@ -86,6 +86,13 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
   const awayScorers = showScorers ? (useEvents ? evScorers.away : parseScorers(game.away_scorers)) : [];
   const hasScorers  = homeScorers.length > 0 || awayScorers.length > 0;
 
+  // Live score derived from the same ESPN events the goal toast uses, so the
+  // card and the toast stay in lockstep (ESPN's play-by-play can register a goal
+  // a poll before its score field ticks). Finished/non-enriched matches keep the
+  // stored authoritative score.
+  const homeScoreDisplay = (isLive && useEvents) ? evScorers.home.length : game.home_score;
+  const awayScoreDisplay = (isLive && useEvents) ? evScorers.away.length : game.away_score;
+
   const cards     = game.events?.filter(e => e.type === 'yellow_card' || e.type === 'red_card') ?? [];
   const homeCards = cards.filter(e => e.team === 'home');
   const awayCards = cards.filter(e => e.team === 'away');
@@ -94,7 +101,7 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
   const clock = useMatchClock(game, isLive);
 
   // Flash score when it changes during a live match
-  const scoreKey = `${game.home_score}-${game.away_score}`;
+  const scoreKey = `${homeScoreDisplay}-${awayScoreDisplay}`;
   const prevScoreRef = useRef(scoreKey);
   const [scorePulse, setScorePulse] = useState(false);
   useEffect(() => {
@@ -133,7 +140,7 @@ export default function MatchCard({ game, teamMap, stadiumMap, gameMap, groupMap
           {isFinished || isLive ? (
             <>
               <span className={`${styles.score} ${scorePulse ? styles.scorePulse : ''}`}>
-                {game.home_score} – {game.away_score}
+                {homeScoreDisplay} – {awayScoreDisplay}
               </span>
               {game.home_penalty != null && game.away_penalty != null && (
                 <span className={styles.penaltyLine}>({game.home_penalty} – {game.away_penalty}) pen</span>
