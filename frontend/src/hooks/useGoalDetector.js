@@ -174,7 +174,10 @@ function extractNewScorer(oldScorers, newScorers) {
   const oldParts = new Set(parseScorers(oldScorers));
   const newParts = parseScorers(newScorers);
   const added = newParts.filter((p) => !oldParts.has(p));
-  return added.length > 0 ? added[added.length - 1] : (newParts[newParts.length - 1] ?? null);
+  // Only return a genuinely new scorer. If the scorers list hasn't caught up to
+  // the score yet, return null rather than the last known name — otherwise the
+  // toast would show the *previous* goal's scorer.
+  return added.length > 0 ? added[added.length - 1] : null;
 }
 
 /**
