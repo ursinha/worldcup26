@@ -176,7 +176,6 @@ loadCallCounts();
 
 // Primary source
 let primaryTimer = null;
-let prevHadLive  = false;
 
 async function pollPrimary() {
   recordCall('primary');
@@ -213,11 +212,12 @@ async function pollPrimary() {
     sourceState.primary.lastError = err.message;
     console.error(`[${primary.id}]`, err.message);
   }
-  // Kick off live enrichment only on transition into live mode,
-  // not on every poll (which would keep resetting the 8-min timer).
-  const nowHasLive = hasLiveMatch();
-  if (nowHasLive && !prevHadLive) scheduleLive();
-  prevHadLive = nowHasLive;
+  // Ensure the live (ESPN) enrichment poller is running whenever a match is
+  // live — not just on the no-live→live edge — so it self-heals if it ever
+  // stopped while matches were still live. scheduleLive() sets liveTimer; it's
+  // nulled when the poller stops, so this only (re)starts a dead poller and
+  // never resets a running one.
+  if (hasLiveMatch() && liveTimer === null) scheduleLive();
   clearTimeout(primaryTimer);
   const interval = hasLiveMatch()
     ? primary.intervals.live
@@ -231,7 +231,7 @@ async function pollPrimary() {
 let liveTimer = null;
 
 async function pollLive() {
-  if (!hasLiveMatch()) return;
+  if (!hasLiveMatch()) { scheduleLive(); return; } // stop cleanly (nulls liveTimer)
   recordCall('live');
   try {
     const raw     = await live.fetchData();
@@ -279,6 +279,7 @@ async function backfillEvents() {
 function scheduleLive() {
   clearTimeout(liveTimer);
   if (!hasLiveMatch()) {
+    liveTimer = null; // mark stopped so pollPrimary can restart it later
     sourceState.live.nextPoll = null;
     sourceState.live.lastFetch = null;
     sourceState.live.lastCount = null;
