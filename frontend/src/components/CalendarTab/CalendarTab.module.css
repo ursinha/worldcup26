@@ -71,6 +71,7 @@
 
 .cell.hasMatches {
   /* background and border set by cell phase classes (cellGroup, cellR32, etc.) */
+  cursor: pointer;
 }
 
 .cell.today {
@@ -200,7 +201,6 @@
       color-mix(in srgb, #009739 22%, transparent),
       color-mix(in srgb, #FEDD00 22%, transparent));
   box-shadow: 0 0 0 2px color-mix(in srgb, #FEDD00 55%, transparent);
-  cursor: pointer;
 }
 
 .cell.brazil .dayNum {
@@ -208,20 +208,64 @@
   font-weight: 800;
 }
 
-/* Tap popover with the Brazil match details (mobile-friendly) */
+/* Tap popover listing a day's matches (click any day with matches) */
 .dayPopover {
   position: fixed;
   z-index: 9998;
-  max-width: 220px;
+  width: 240px;
+  max-height: 60vh;
+  overflow: hidden;
   background: var(--surface-hi);
   color: var(--text-1);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.72rem;
-  line-height: 1.3;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   pointer-events: none;
+}
+
+.popoverTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+
+.popoverRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-top: 1px solid var(--border-faint);
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.popoverTime {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-2);
+}
+
+.popoverTeams {
+  color: var(--text-1);
+}
+
+.popoverStage {
+  grid-column: 2;
+  font-size: 0.62rem;
+  color: var(--text-3);
+}
+
+.popoverBrazil .popoverTeams {
+  font-weight: 700;
+}
+
+.popoverBrazil {
+  border-left: 2px solid #FEDD00;
+  margin-left: -0.6rem;
+  padding-left: calc(0.6rem - 2px);
 }
 
 /* "BRA" chip — bottom corner so it doesn't sit on the date number */

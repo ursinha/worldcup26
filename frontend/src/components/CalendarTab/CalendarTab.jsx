@@ -97,14 +97,14 @@ export default function CalendarTab() {
     return t?.id ?? null;
   }, [teamsData]);
 
-  // Group matches by BRT date → { phases, count, hasBrazil }
+  // Group matches by BRT date → { phases, count, hasBrazil, topPhase, games }
   const matchDays = useMemo(() => {
     if (!matchesData?.games) return {};
     const days = {};
     for (const game of matchesData.games) {
       const utc = gameToUTC(game.local_date, game.stadium_id);
       const { isoDate } = formatBRT(utc);
-      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false, topPhase: null, brazilMatch: null };
+      if (!days[isoDate]) days[isoDate] = { phases: new Set(), count: 0, hasBrazil: false, topPhase: null, games: [] };
       days[isoDate].phases.add(game.type);
       days[isoDate].count += 1;
       if (!days[isoDate].topPhase || (PHASE_RANK[game.type] ?? 0) > (PHASE_RANK[days[isoDate].topPhase] ?? 0)) {
@@ -113,18 +113,20 @@ export default function CalendarTab() {
 
       const brazilHome = game.home_team_name_en === BRAZIL_NAME || (brazilId && game.home_team_id === brazilId);
       const brazilAway = game.away_team_name_en === BRAZIL_NAME || (brazilId && game.away_team_id === brazilId);
-      if (brazilHome || brazilAway) {
-        days[isoDate].hasBrazil = true;
-        const opponent = brazilHome
-          ? (teamNamePt(game.away_team_name_en) ?? matchLabelPt(game.away_team_label) ?? 'A definir')
-          : (teamNamePt(game.home_team_name_en) ?? matchLabelPt(game.home_team_label) ?? 'A definir');
-        days[isoDate].brazilMatch = {
-          opponent,
-          time: formatBRT(utc).time,
-          stage: STAGE_TITLE[game.type] ?? game.type,
-        };
-      }
+      const isBrazil = brazilHome || brazilAway;
+      if (isBrazil) days[isoDate].hasBrazil = true;
+
+      days[isoDate].games.push({
+        id: game.id,
+        utcMs: utc ? utc.getTime() : 0,
+        time: formatBRT(utc).time,
+        homeName: teamNamePt(game.home_team_name_en) ?? matchLabelPt(game.home_team_label) ?? 'A definir',
+        awayName: teamNamePt(game.away_team_name_en) ?? matchLabelPt(game.away_team_label) ?? 'A definir',
+        stage: game.type === 'group' ? `Grupo ${game.group}` : (STAGE_TITLE[game.type] ?? game.type),
+        isBrazil,
+      });
     }
+    for (const d of Object.values(days)) d.games.sort((a, b) => a.utcMs - b.utcMs);
     return days;
   }, [matchesData, brazilId]);
 
@@ -166,24 +168,23 @@ export default function CalendarTab() {
             const isToday = iso === today;
             const isPast = iso < today;
 
-            const brazilTitle = info?.brazilMatch
-              ? `🇧🇷 Brasil × ${info.brazilMatch.opponent} · ${info.brazilMatch.time} BRT · ${info.brazilMatch.stage}`
-              : undefined;
-
             return (
               <div
                 key={iso}
                 className={`${styles.cell} ${info ? styles.hasMatches : ''} ${info?.topPhase ? styles[CELL_PHASE_STYLE[info.topPhase]] || '' : ''} ${isToday ? styles.today : ''} ${info?.hasBrazil ? styles.brazil : ''} ${isPast ? styles.past : ''}`}
-                title={brazilTitle}
                 onClick={(e) => {
-                  if (!info?.brazilMatch) { setPopover(null); return; }
+                  if (!info?.games?.length) { setPopover(null); return; }
                   e.stopPropagation();
                   const r = e.currentTarget.getBoundingClientRect();
+                  const openUp = r.top > window.innerHeight / 2;
                   setPopover((p) => (p?.iso === iso ? null : {
                     iso,
-                    text: brazilTitle,
-                    top: r.bottom + 4,
-                    left: Math.min(r.left, window.innerWidth - 236),
+                    label: `${day} de ${MONTH_NAMES[month]}`,
+                    games: info.games,
+                    left: Math.min(r.left, window.innerWidth - 252),
+                    ...(openUp
+                      ? { bottom: window.innerHeight - r.top + 4 }
+                      : { top: r.bottom + 4 }),
                   }));
                 }}
               >
@@ -223,8 +224,19 @@ export default function CalendarTab() {
       </div>
 
       {popover && (
-        <div className={styles.dayPopover} style={{ top: popover.top, left: popover.left }} role="tooltip">
-          {popover.text}
+        <div
+          className={styles.dayPopover}
+          style={{ top: popover.top, bottom: popover.bottom, left: popover.left }}
+          role="tooltip"
+        >
+          <div className={styles.popoverTitle}>{popover.label}</div>
+          {popover.games.map((m) => (
+            <div key={m.id} className={`${styles.popoverRow} ${m.isBrazil ? styles.popoverBrazil : ''}`}>
+              <span className={styles.popoverTime}>{m.time}</span>
+              <span className={styles.popoverTeams}>{m.homeName} × {m.awayName}</span>
+              <span className={styles.popoverStage}>{m.stage}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
