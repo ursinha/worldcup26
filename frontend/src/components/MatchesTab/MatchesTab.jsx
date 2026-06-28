@@ -226,7 +226,7 @@ export default function MatchesTab() {
           <button
             key={key}
             className={`${styles.filterBtn} ${!searching && filter === key ? styles.active : ''}`}
-            onClick={() => setFilter(key)}
+            onClick={() => { setQuery(''); setFilter(key); }}
           >
             {label}
           </button>
