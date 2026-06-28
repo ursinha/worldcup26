@@ -24,5 +24,4 @@ git pull origin main --quiet
 
 export COMMIT=$(git rev-parse --short HEAD)
 docker compose up -d --build
-docker compose restart caddy
 echo "$(date '+%Y-%m-%d %H:%M:%S') deployed $COMMIT"

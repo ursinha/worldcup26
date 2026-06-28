@@ -1,17 +1,4 @@
 services:
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      - worldcup
-    restart: unless-stopped
-
   worldcup:
     build:
       context: .
@@ -24,8 +11,18 @@ services:
     volumes:
       - worldcup-data:/app/data
     restart: unless-stopped
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.worldcup.rule=Host(`wc.multilateral.me`)"
+      - "traefik.http.routers.worldcup.entrypoints=websecure"
+      - "traefik.http.routers.worldcup.tls.certresolver=letsencrypt"
+      - "traefik.http.services.worldcup.loadbalancer.server.port=3001"
 
 volumes:
   worldcup-data:
-  caddy-data:
-  caddy-config:
+
+networks:
+  traefik-net:
+    external: true
