@@ -200,7 +200,7 @@ async function pollPrimary() {
       console.log(`[${primary.id}] resolved ${resolvedRows.length} knockout slot(s)`);
     }
 
-    const predRows = computeAllPredictions(cache.matches?.games ?? []);
+    const predRows = computeAllPredictions(cache.matches?.games ?? [], cache.teams?.teams ?? []);
     if (predRows.length) { savePredictions(predRows); refreshCache(); }
 
     cache.lastUpdated             = new Date().toISOString();
@@ -418,7 +418,7 @@ async function pollOdds() {
       saveOdds(updates);
       refreshCache();
       // Recompute predictions with the new O/U lines
-      const predRows = computeAllPredictions(cache.matches?.games ?? []);
+      const predRows = computeAllPredictions(cache.matches?.games ?? [], cache.teams?.teams ?? []);
       if (predRows.length) { savePredictions(predRows); refreshCache(); }
       console.log(`[${oddsSource.id}] updated ${updates.length} O/U line(s)`);
     } else {

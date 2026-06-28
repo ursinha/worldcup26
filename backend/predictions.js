@@ -18,6 +18,8 @@
  *    Pure tournament attack/defense ratings with Bayesian smoothing.
  */
 
+import { strengthByTeamId, priorMultipliers } from './teamStrength.js';
+
 function poissonPmf(k, lambda) {
   if (lambda <= 0) return k === 0 ? 1 : 0;
   let logP = -lambda + k * Math.log(lambda);
@@ -70,8 +72,14 @@ function findLambdaRatio(total, targetHomeWin, maxGoals) {
 /**
  * Derive attack / defense ratings from finished group stage matches.
  * Returns null if there are fewer than 2 finished games.
+ *
+ * @param {Array}  games
+ * @param {Object} priors - { id: { attMult, defMult } } strength prior the
+ *   Bayesian smoothing pulls toward (instead of a flat league average). Missing
+ *   teams default to neutral {1,1}, so an empty object == the old flat-prior
+ *   behavior.
  */
-export function computeRatings(games) {
+export function computeRatings(games, priors = {}) {
   const finished = games.filter(g => g.finished === 'TRUE' && g.type === 'group'
     && g.home_score != null && g.away_score != null);
 
@@ -99,15 +107,22 @@ export function computeRatings(games) {
 
   const leagueAvg = totalGoals / (finished.length * 2);
 
-  // Bayesian smoothing: pull extreme ratings toward the mean,
-  // weighted by games played (more games → less smoothing).
+  // Bayesian smoothing: pull ratings toward each team's strength prior,
+  // weighted by games played (more games → less smoothing). With no prior the
+  // target is the league average (attMult/defMult = 1), i.e. the old behavior.
   const SMOOTH = 2;
 
+  // Cover every team that has games OR a strength prior, so a team that hasn't
+  // played yet still resolves to its pure prior.
+  const ids = new Set([...Object.keys(stats), ...Object.keys(priors)]);
+
   const ratings = {};
-  for (const [id, s] of Object.entries(stats)) {
+  for (const id of ids) {
+    const s = stats[id] ?? { scored: 0, conceded: 0, games: 0 };
+    const { attMult = 1, defMult = 1 } = priors[id] ?? {};
     ratings[id] = {
-      attack:  ((s.scored   + leagueAvg * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
-      defense: ((s.conceded + leagueAvg * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
+      attack:  ((s.scored   + leagueAvg * attMult * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
+      defense: ((s.conceded + leagueAvg * defMult * SMOOTH) / (s.games + SMOOTH)) / leagueAvg,
     };
   }
 
@@ -202,9 +217,13 @@ export function predictMatch(homeId, awayId, model, ouLine = null, h2hHome = nul
 
 /**
  * Compute predictions for all upcoming matches and return upsertable rows.
+ *
+ * @param {Array} games
+ * @param {Array} teams - team metadata, for the strength prior (optional)
  */
-export function computeAllPredictions(games) {
-  const model = computeRatings(games);
+export function computeAllPredictions(games, teams = []) {
+  const priors = priorMultipliers(strengthByTeamId(teams));
+  const model = computeRatings(games, priors);
   if (!model) return [];
 
   const now = Date.now();
