@@ -30,6 +30,9 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
       ? +game.away_penalty > +game.home_penalty
       : +game.away_score > +game.home_score
   );
+  // In a finished knockout match the non-winning side is eliminated.
+  const homeLoser = isFinished && awayWinner;
+  const awayLoser = isFinished && homeWinner;
 
   return (
     <div
@@ -45,6 +48,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               score={isFinished || isLive ? game.home_score : null}
               penalty={hasPenalties ? game.home_penalty : null}
               isWinner={homeWinner}
+              isLoser={homeLoser}
               isLive={isLive}
               showGroup={showGroup}
             />
@@ -55,6 +59,7 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
               score={isFinished || isLive ? game.away_score : null}
               penalty={hasPenalties ? game.away_penalty : null}
               isWinner={awayWinner}
+              isLoser={awayLoser}
               showGroup={showGroup}
             />
             {isNotStarted && matchDate && (
@@ -69,18 +74,18 @@ export default function BracketSlot({ game, homeResolved, awayResolved, slotHeig
   );
 }
 
-function TeamRow({ resolved, label, score, penalty, isWinner, isLive, showGroup }) {
+function TeamRow({ resolved, label, score, penalty, isWinner, isLoser, isLive, showGroup }) {
   const { team, projected, group } = resolved ?? { team: null, projected: false, group: null };
 
   return (
-    <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${!team ? styles.unknown : ''} ${team && !projected ? styles.confirmed : ''}`}>
+    <div className={`${styles.team} ${isWinner ? styles.winner : ''} ${isLoser ? styles.loser : ''} ${!team ? styles.unknown : ''} ${team && !projected && !isLoser ? styles.confirmed : ''}`}>
       {team?.flag ? (
         <img className={styles.flag} src={team.flag} alt={teamNamePt(team.name_en)} loading="lazy" />
       ) : (
         <span className={styles.flagPlaceholder} />
       )}
       <span
-        className={`${styles.teamName} ${isWinner ? styles.winner : ''} ${projected ? styles.projected : ''}`}
+        className={`${styles.teamName} ${isWinner ? styles.winner : ''} ${isLoser ? styles.loser : ''} ${projected ? styles.projected : ''}`}
       >
         {teamNamePt(team?.name_en) ?? shortLabel(label)}
         {projected && team && <span className={styles.projBadge}> proj</span>}

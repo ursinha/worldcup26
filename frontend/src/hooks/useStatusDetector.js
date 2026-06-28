@@ -34,6 +34,21 @@ function computeStatuses(groups, matches) {
 }
 
 /**
+ * Decide the winner/loser of a finished knockout match (penalties break draws).
+ * Returns null when there's no clear result yet (e.g. a draw with no penalties),
+ * so we don't fire a misleading toast on partial data.
+ */
+function decideKnockout(g) {
+  const pens = g.home_penalty != null && g.away_penalty != null;
+  const home = pens ? +g.home_penalty : +g.home_score;
+  const away = pens ? +g.away_penalty : +g.away_score;
+  if (home === away) return null;
+  return home > away
+    ? { winnerId: g.home_team_id, loserId: g.away_team_id }
+    : { winnerId: g.away_team_id, loserId: g.home_team_id };
+}
+
+/**
  * Fire toasts when a team's qualification status changes between polls:
  *   - confirmed clinch/elimination (math-locked) — always;
  *   - projected in/out flips while a match is live — provisional.
@@ -44,6 +59,7 @@ export function useStatusDetector() {
   const { data: groupsData } = usePolling('/api/groups', 15_000);
   const { data: teamsData } = usePolling('/api/teams', 60_000);
   const prevRef = useRef(null);
+  const prevFinishedRef = useRef(null);
   const [toasts, setToasts] = useState([]);
 
   const dismiss = useCallback((id) => {
@@ -86,6 +102,36 @@ export function useStatusDetector() {
 
     prevRef.current = map;
   }, [groupsData, matchesData, teamName]);
+
+  // Fire a toast when a knockout match ends: the loser is eliminated, the winner
+  // advances (or is crowned champion in the final). The 3rd-place playoff is
+  // skipped — both sides were already eliminated in the semifinals.
+  useEffect(() => {
+    if (!matchesData?.games) return;
+    const knockout = matchesData.games.filter(
+      (g) => g.type && g.type !== 'group' && g.type !== 'third',
+    );
+    const finishedMap = Object.fromEntries(
+      knockout.map((g) => [g.id, g.finished === 'TRUE']),
+    );
+    const prev = prevFinishedRef.current;
+
+    if (prev) {
+      const fresh = [];
+      for (const g of knockout) {
+        if (g.finished !== 'TRUE' || prev[g.id]) continue; // not a new finish
+        const res = decideKnockout(g);
+        if (!res) continue;
+        fresh.push(makeToast('eliminated', teamName(res.loserId), null));
+        fresh.push(
+          makeToast(g.type === 'final' ? 'champion' : 'advanced', teamName(res.winnerId), null),
+        );
+      }
+      if (fresh.length) setToasts((list) => [...list, ...fresh]);
+    }
+
+    prevFinishedRef.current = finishedMap;
+  }, [matchesData, teamName]);
 
   // Dev helpers: window.__testClinch('eliminated','Cape Verde','H') or ?testclinch=eliminated
   useEffect(() => {

@@ -49,6 +49,12 @@
   padding-left: 7px;
 }
 
+.team.loser {
+  background: var(--red-dim);
+  border-left: 3px solid var(--red);
+  padding-left: 7px;
+}
+
 .team.unknown {
   opacity: 0.4;
 }
@@ -83,6 +89,10 @@
 .teamName.winner {
   color: var(--score-color);
   font-weight: 700;
+}
+
+.teamName.loser {
+  color: var(--text-3);
 }
 
 .teamName.projected {
